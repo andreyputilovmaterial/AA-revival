@@ -324,6 +324,17 @@ def build_validationissues_df(variables,df_prev,config):
 
 
 def update_map(variables,dataframes,config):
+    if not dataframes:
+        assert variables, 'update_map: either map or variables are required'
+        dataframes = (
+            pd.DataFrame( data = { }, index = pd.Series( [], name = 'Description' ), ),
+            pd.DataFrame( data = { }, index = pd.Series( [], name = 'Question' ), ),
+            pd.DataFrame( data = { }, index = pd.Series( [], name = 'Question' ), ),
+            pd.DataFrame( data = { }, index = pd.Series( [], name = 'Where failed' ), ),
+            pd.DataFrame( data = { }, index = pd.Series( [], name = 'Question' ), ),
+            pd.DataFrame( data = { }, index = pd.Series( [], name = 'Category_Path' ), ),
+        )
+
     overview_df, variables_df, categories_df, validationissues_df, mdd_data_variables_df, mdd_data_categories_df = dataframes
 
     print('building "Overview" sheet...')

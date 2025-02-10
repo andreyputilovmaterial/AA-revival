@@ -9,10 +9,10 @@ from . import mdmutils
 
 
 def should_exclude(mdmitem):
-    def should_exclude_base_on_props(mdmitem):
+    def should_exclude_based_on_props(mdmitem):
         return  mdmitem.Properties['SavRemove'] or mdmitem.Properties['D_RemoveSav'] or mdmitem.Properties['D_Remove'] or mdmitem.Properties['RemoveSav']
     def should_exclude_recursively(mdmitem):
-        if should_exclude_base_on_props(mdmitem):
+        if should_exclude_based_on_props(mdmitem):
             return True
         mdmparent = mdmutils.get_parent(mdmitem) if mdmutils.has_parent(mdmitem) else None
         if mdmparent:
@@ -42,6 +42,7 @@ def sanitize_shortname(name):
 
 def validate_shortname(name):
     return not not re.match(r'^\s*?(?:\w+|(?:\[L:[^\]:]*:[^:\]]*\]))+\s*?$',name,flags=re.I|re.DOTALL) and not re.match(r'^\s*?\d.*?$',name,flags=re.I|re.DOTALL)
+
 
 
 def read_shortname(mdmvar):
@@ -157,20 +158,31 @@ def read_shortname_aastyle_logic_based_on_properties(mdmvar):
 
 
 
-
+# for Ethnicity.HelperFields[AnotherRace]
+# (when the ShortName for Ethnicyt is S18, and analysis value for "AnotherRace" is 98)
+# AA was generating
+# S18_Other_98
+# we are trying to replicate the same logic here
+# we don't have our map passed to a function, so we can't grab the code [98] here
+# so I return [L:Ethnicity:AnotherRace]
+# and then, later, it is replaced with an Excel function
 def read_shortname_aastyle_otherspec(mdmvar):
     def is_equal_name(name1,name2):
         return '{n}'.format(n=name1).lower()=='{n}'.format(n=name2).lower()
     mdmcat_matching_otherspec = None
     mdmparent = mdmutils.get_parent(mdmvar) if mdmutils.has_parent(mdmvar) else None
     if mdmparent and mdmutils.is_helper_field(mdmvar):
+        # trying to find that "Other" category that matches that given field
         if mdmutils.is_categorical(mdmparent):
             for mdmcat in mdmutils.list_mdmcategories(mdmparent):
                 if mdmcat.Flag==80 and mdmcat.OtherReference and is_equal_name(mdmcat.Name,mdmvar.Name):
                     mdmcat_matching_otherspec = mdmcat
     if mdmcat_matching_otherspec:
+        # previously I had
+        # result = '="'+shortname_parent_part + '_Other_' +'" & VLOOKUP("'+mdmcat.Name+'"\'MDD_Data_Categories\'!$
         # this is super bad design, returning a formula from here
-        # we are expected to return a name, not any references
+        # if the layout of columns changes, no one will find out that it needs to be updated here
+        # we are expected to return a name (a string value) from this function
         # but I am trying to repeat older logic from AA, we need category code here, I can't think of better solution right now
         # maybe I should introduce some syntax with inserts, like [L0], or [L0:category], something following similar standards to flatout pattern
         # not sure, maybe I'll do

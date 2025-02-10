@@ -53,6 +53,19 @@ def has_parent(mdmvar):
 
 
 
+# it's better to always use this function
+# so don't call "parent = item.Parent"
+# please do "parent = get_parent(item)" instead
+# because, "item.Parent" can give you a meaningless block of fields with no name
+# and this funciton skips it and gives the next parent
+# for example
+# the metadata scripts are
+# Familiarity "How familiar are you..." loop { use SL_BrandList } fields - ( GV "" categorical...
+# and your "item" variable references to "GV"
+# you check item.Parent
+# and you are not getting "Familiarity"
+# you are getting some middle name that stands for "fields" which is meaningless, and you need another step to get to "Familiarity"
+# so checking for grids is getting more complicated
 def get_parent(mdmvar):
     if mdmvar.Parent and mdmvar.Parent.Name:
         mdmparent = mdmvar.Parent

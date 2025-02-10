@@ -5,6 +5,8 @@ import re
 
 
 
+# a helper class to show progress and print it to console
+# nothing substantial, can be removed, if you need more simplicity in the repository
 class PerformanceMonitor:
     def __init__(self,config={}):
         self.__config = config
