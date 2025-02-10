@@ -11,17 +11,17 @@ import pandas as pd
 if __name__ == '__main__':
     # run as a program
     import produce_savprep_mrs
-    import read_mdd
+    import read_mdd.list_variables as read_mdd
     import read_map
 elif '.' in __name__:
     # package
     from . import produce_savprep_mrs
-    from . import read_mdd
+    from .read_mdd import list_variables as read_mdd
     from . import read_map
 else:
     # included with no parent package
     import produce_savprep_mrs
-    import read_mdd
+    import read_mdd.list_variables as read_mdd
     import read_map
 
 
@@ -87,6 +87,7 @@ def cli_program_produce_savprep_mrs():
     else:
         raise FileNotFoundError('Out filename: file not provided; please use --out option')
 
+    print('{script_name}: working, generating mrs script'.format(script_name=script_name))
     result = produce_savprep_mrs.generate_savprep_mrs_scripts(variables,map_df,config)
     
     print('{script_name}: saving as "{fname}"'.format(fname=out_filename,script_name=script_name))
@@ -101,11 +102,11 @@ def cli_program_produce_savprep_mrs():
 
 def cli_program_update_map():
     time_start = datetime.now()
-    script_name = 'AA Revival: produce savprep mrs'
+    script_name = 'AA Revival: update map'
 
     parser = argparse.ArgumentParser(
-        description="mdmtools AA Revival utility: produce savprep mrs",
-        prog='mddtools-aarevival-produce-savprep-mrs'
+        description="mdmtools AA Revival utility: update map",
+        prog='mddtools-aarevival-update-map'
     )
     parser.add_argument(
         '--mdd',
@@ -158,6 +159,8 @@ def cli_program_update_map():
     
     config['mdd_file_provided'] = not not mdd_filename
     config['map_file_provided'] = not not map_filename
+    config['mdd_filename'] = mdd_filename if mdd_filename else ''
+    config['map_filename'] = map_filename if map_filename else ''
 
     if not mdd_filename:
         if not map_filename:
@@ -174,12 +177,14 @@ def cli_program_update_map():
             if not(Path(mdd_filename).is_file()):
                 raise FileNotFoundError('file not found: {fname}'.format(fname=mdd_filename))
             print('{script_name}: reading MDD "{fname}"'.format(fname=mdd_filename,script_name=script_name))
-            map_df = read_map.load(mdd_filename)
+            variables = read_mdd.get_variables(mdd_filename)
+            config['mdd_filename'] = mdd_filename if mdd_filename else ''
 
     out_filename = map_filename if map_filename else '.\\AnalysisAuthorRevival.xlsx'
     out_filename = out_filename + '.updated.xlsx' # TODO: debug, code for testing only, remove when done with testing
     assert out_filename, 'out filename is still missing, please check the code'
 
+    print('{script_name}: working, updating the map'.format(script_name=script_name))
     result_df = read_map.update_map(variables,map_df,config)
     
     print('{script_name}: saving as "{fname}"'.format(fname=out_filename,script_name=script_name))
@@ -225,7 +230,7 @@ def cli():
         # stack trace is still printed (I even made it longer to 20 steps!)
         # but the error message itself is separated and printed as the last message again
 
-        # for example, I don't write "print('File Not Found!');exit(1);", I just write "raise FileNotFoundErro()"
+        # for example, I don't write "print('File Not Found!');exit(1);", I just write "raise FileNotFoundError()"
         print('')
         print('Stack trace:')
         print('')
