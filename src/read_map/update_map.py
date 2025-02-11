@@ -13,6 +13,8 @@ try:
 except:
     ZoneInfo = None
     pass # older python
+from openpyxl.utils import get_column_letter
+# from openpyxl.worksheet.formula import ArrayFormula
 
 
 if __name__ == '__main__':
@@ -73,7 +75,7 @@ def build_overview_df(variables,df,config):
     mdmdoc = variables[0]
     df.loc['Tool'] = [CONFIG_TOOL_NAME]
     df.loc['MDD'] = [mdd_filename_part]
-    df.loc['Validation'] = [f'=IF(AND(AND(Variables!$G$2:$G$9999),TRUE),"No issues","Failed")']
+    df.loc['Validation'] = ['=IF(AND(AND(Variables!$G$2:$G$699999),AND(MDD_Data_Categories!$G$2:$G$699999)),"No issues","Failed")']
     df.loc['MDD path'] = [config['mdd_filename']]
     df.loc['MDD last refreshed'] = [mdd_refresh_datetime]
     df.loc['JobNumber property from MDD'] = [mdmdoc.Properties['JobNumber']]
@@ -167,9 +169,9 @@ def compile_question_type_description(mdmvar):
 def build_mdd_data_variables_df(mdmvariables,df_prev,config):
     def parse_shortname_formula(txt):
         def repl_cat_analysisvalue(matches):
-            return '"&VLOOKUP("{var}.Categories[{cat}]",\'MDD_Data_Categories\'!$A2:$G9999,6,FALSE)&"'.format(var=matches[1],cat=matches[2])
+            return '"&VLOOKUP("{var}.Categories[{cat}]",\'MDD_Data_Categories\'!$A2:$G699999,6,FALSE)&"'.format(var=matches[1],cat=matches[2])
         def repl_var_shortname(matches):
-            return '"&VLOOKUP("{var}",\'MDD_Data_Variables\'!$A2:$G9999,5,FALSE)&"'.format(var=matches[1])
+            return '"&VLOOKUP("{var}",\'MDD_Data_Variables\'!$A2:$G699999,5,FALSE)&"'.format(var=matches[1])
         if '[L' in txt:
             assert '"' not in txt, '\'"\' in shortname, please check'
             return '="{f}"'.format(f=re.sub(r'\[L:(.*?)\]',repl_var_shortname,re.sub(r'\[L:(.*?):(.*?)\]',repl_cat_analysisvalue,txt,flags=re.I|re.DOTALL),flags=re.I|re.DOTALL))
@@ -206,7 +208,7 @@ def build_mdd_data_variables_df(mdmvariables,df_prev,config):
         question_shortname = None
         if mdmutils.is_data_item(mdmvariable):
             try:
-                if question_shortname in df_prev.index.get_level_values(0):
+                if mdmvariable.FullName in df_prev.index.get_level_values(0):
                     question_shortname = df_prev.loc[mdmvariable.FullName,'Suggested ShortName']
             except Exception as e:
                 raise e
@@ -218,7 +220,18 @@ def build_mdd_data_variables_df(mdmvariables,df_prev,config):
         question_shortname = parse_shortname_formula(question_shortname)
         question_type = compile_question_type_description(mdmvariable)
         question_label = '{s}'.format(s=mdmvariable.Label)
-        question_suggested_shortname = '=VLOOKUP($A{row},Variables!$A$2:$H$9999,4,FALSE)'.format(row=row) if mdmutils.is_data_item(mdmvariable) else ''
+
+        # question_suggested_shortname = '=VLOOKUP($A{row},Variables!$A$2:$H$699999,4,FALSE)'.format(row=row) if mdmutils.is_data_item(mdmvariable) else ''
+        question_suggested_shortname = ''
+        if mdmutils.is_data_item(mdmvariable):
+            # a data-item - show ShortName with VLOOKUP()
+            question_suggested_shortname = '=VLOOKUP($A{row},Variables!$A$2:$H$699999,4,FALSE)'.format(row=row)
+        else:
+            # not a data items - compile a comma-separated list of all data-items inside
+            question_suggested_shortname = '=""'
+            for mdm_item_within in mdmutils.list_mdmdatafields_recursively(mdmvariable):
+                question_suggested_shortname = question_suggested_shortname+ '&", "&VLOOKUP("{var}",Variables!$A$2:$H$699999,4,FALSE)'.format(row=row,var=mdm_item_within.FullName)
+            question_suggested_shortname = question_suggested_shortname.replace('=""&", "','=""')
 
         question_validation_field_isdatavariable = 'TRUE' if mdmutils.is_data_item(mdmvariable) else 'FALSE'
 
@@ -228,7 +241,7 @@ def build_mdd_data_variables_df(mdmvariables,df_prev,config):
         question_validation_notblank = '=IF($F{row},AND(NOT(ISBLANK($E{row})),NOT($E{row}=0)),"")'.format(row=row)
         question_validation_isalphanumeric= '=IF($F{row},LEN(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(H{row},"a",""),"b",""),"c",""),"d",""),"e",""),"f",""),"g",""),"h",""),"i",""),"j",""),"k",""),"l",""),"m",""),"n",""),"o",""),"p",""),"q",""),"r",""),"s",""),"t",""),"u",""),"v",""),"w",""),"x",""),"y",""),"z",""),"0",""),"1",""),"2",""),"3",""),"4",""),"5",""),"6",""),"7",""),"8",""),"9",""),"_",""))=0,"")'.format(row=row)
         question_validation_notstartszero = '=IF($F{row},NOT(OR(LEFT(H{row},"1")="0",LEFT(H{row},"1")="1",LEFT(H{row},"1")="2",LEFT(H{row},"1")="3",LEFT(H{row},"1")="4",LEFT(H{row},"1")="5",LEFT(H{row},"1")="6",LEFT(H{row},"1")="7",LEFT(H{row},"1")="8",LEFT(H{row},"1")="9")),"")'.format(row=row)
-        question_validation_isunique = '=IF($F{row},(MATCH($A{row},$A$2:$A$9999,0)=MATCH($H{row},$H$2:$H$9999,0)),"")'.format(row=row)
+        question_validation_isunique = '=IF($F{row},(MATCH($A{row},$A$2:$A$699999,0)=MATCH($H{row},$H$2:$H$699999,0)),"")'.format(row=row)
 
         df.loc[question_name] = [
             question_type,
@@ -250,7 +263,84 @@ def build_mdd_data_variables_df(mdmvariables,df_prev,config):
 
 
 
-def build_mdd_data_categories_df(variables,df,config):
+def build_mdd_data_categories_df(mdmvariables,df,config):
+    df = pd.DataFrame(
+        data = {
+            'Variable': [],
+            'Category': [],
+            'SharedList': [],
+            'Label': [],
+            'AnalysisValue': [],
+            'Validation Final': [],
+            'Validation - Not blank': [],
+            'Validation - Is whole number': [],
+            'Validation - Is unique': [],
+            'Variable is not in exclusions': [],
+            'Validation - Is unique within shared list': [],
+            'Helper field - vaiable name + category name': [],
+            'Helper field - vaiable name + analysis value': [],
+            'Helper Field - Shared list name + analysis value': [],
+            'Helper Field - Shared list name + category name': [],
+        },
+        index = pd.Series( [], name = 'Category_Path' ),
+    )
+    row = 2
+    performance_counter = iter(util_perf.PerformanceMonitor(config={
+        'total_records': len(mdmvariables),
+        'report_frequency_records_count': 1,
+        'report_frequency_timeinterval': 14,
+        'report_text_pipein': 'progress reading analysis values for categories in variables',
+    }))
+    for mdmvariable in mdmvariables:
+        if mdmvariable.Name=='':
+            continue
+        category_question_name = mdmvariable.FullName
+        next(performance_counter)
+        if mdmutils.is_iterative(mdmvariable) or mdmutils.has_own_categories(mdmvariable):
+            for mdmsharedlist_name, mdmcategory in mdmutils.list_mdmcategories_with_slname(mdmvariable):
+
+                category_name = mdmcategory.Name
+                # category_item_name = '{var}.Categories[{cat}]'.format(var=category_question_name,cat=category_name)
+                category_item_name = '=""&$B{row}&".Categories["&$C{row}&"]"'.format(row=row)
+
+                category_sharedlist = mdmsharedlist_name if mdmsharedlist_name else ''
+
+                category_label = mdmcategory.Label
+                category_analysisvalue = '=IF( _xlfn.INDEX( _xlfn.XLOOKUP( $B{row}&" : Analysis Value", \'Analysis Values\'!$A$2:$A$699999, \'Analysis Values\'!$C$2:$ZZ$699999 ), MATCH( $C{row}, _xlfn.XLOOKUP( $B{row}&"", \'Analysis Values\'!$A$2:$A$699999, \'Analysis Values\'!$C$2:$ZZ$699999 ), 0 ) )&""="", "", VALUE( _xlfn.INDEX( _xlfn.XLOOKUP( $B{row}&" : Analysis Value", \'Analysis Values\'!$A$2:$A$699999, \'Analysis Values\'!$C$2:$ZZ$699999 ), MATCH( $C{row}, _xlfn.XLOOKUP( $B{row}&"", \'Analysis Values\'!$A$2:$A$699999, \'Analysis Values\'!$C$2:$ZZ$699999 ), 0 ) )&"" ) )'.format(row=row)
+                # category_analysisvalue = ArrayFormula(text=category_analysisvalue,ref='')
+                category_validation = '=IF(K{row},AND(H{row},I{row},J{row},OR(ISBLANK($D{row}),$L{row})),TRUE)'.format(row=row)
+                category_validation_field_notblank = '=IF(NOT(ISERROR($F{row})),NOT(OR(ISBLANK($F{row}),$F{row}="")),FALSE)'.format(row=row)
+                category_validation_field_iswholenumber = '=IF(ISERROR(VALUE($F{row})),FALSE,AND(VALUE($F{row})>=0,MOD(VALUE($F{row}),1)=0))'.format(row=row)
+                category_validation_field_isunique = '=MATCH($M{row},$M$2:$M$699999,0)=MATCH($N{row},$N$2:$N$699999,0)'.format(row=row)
+                category_validation_field_varnotinexclusions = '=NOT(ISBLANK(VLOOKUP($B{row},Variables!$A$2:$H$699999,6,FALSE)))'.format(row=row)
+                category_validation_field_isuniquewithinsl = '=IF(ISBLANK($D{row}),TRUE,MATCH($P{row},$P$2:$P$699999,0)=MATCH($O{row},$O$2:$O$699999,0))'.format(row=row)
+                category_validation_field_helper_varnamepluscatname = '=""&$B{row}&"_"&$C{row}'.format(row=row)
+                category_validation_field_helper_varnamepluscatvalue = '=IF(NOT(ISERROR(VALUE($F{row}))),""&$B{row}&"_"&$F{row},""&$B{row}&"_"&"missing")'.format(row=row)
+                category_validation_field_helper_slnamepluscatname = '=IF(NOT(ISBLANK($D{row})),IF(NOT(ISERROR(VALUE($F{row}))),""&$D{row}&"_"&$F{row},""&$D{row}&"_"&"missing"),"")'.format(row=row)
+                category_validation_field_helper_slnamepluscatvalue = '=IF(NOT(ISBLANK($D{row})),""&$D{row}&"_"&$C{row},"")'.format(row=row)
+
+                df.loc[category_item_name] = [
+                    category_question_name,
+                    category_name,
+
+                    category_sharedlist,
+
+                    category_label,
+                    category_analysisvalue,
+
+                    category_validation,
+
+                    category_validation_field_notblank,
+                    category_validation_field_iswholenumber,
+                    category_validation_field_isunique,
+                    category_validation_field_varnotinexclusions,
+                    category_validation_field_isuniquewithinsl,
+                    category_validation_field_helper_varnamepluscatname,
+                    category_validation_field_helper_varnamepluscatvalue,
+                    category_validation_field_helper_slnamepluscatname,
+                    category_validation_field_helper_slnamepluscatvalue,
+                ]
+                row = row + 1
     return df
 
 
@@ -290,12 +380,12 @@ def build_variables_df(mdmvariables,mdd_data_variables_df,df_prev,config):
         if mdmutils.is_nocasedata(mdmvariable):
             continue
 
-        question_type = '=VLOOKUP($A{row},\'MDD_Data_Variables\'!$A$2:$G$9999,2,FALSE)'.format(row=row)
-        question_shortname_current = '=VLOOKUP($A{row},\'MDD_Data_Variables\'!$A$2:$G$9999,3,FALSE)'.format(row=row)
+        question_type = '=VLOOKUP($A{row},\'MDD_Data_Variables\'!$A$2:$G$699999,2,FALSE)'.format(row=row)
+        question_shortname_current = '=VLOOKUP($A{row},\'MDD_Data_Variables\'!$A$2:$G$699999,3,FALSE)'.format(row=row)
         question_shortname_final = df_prev.loc[question_name,'Final ShortName'] if question_name in df_prev.index.get_level_values(0) else mdd_data_variables_df.loc[question_name,'ShortName in MDD']
-        question_label = '=VLOOKUP($A{row},\'MDD_Data_Variables\'!$A$2:$G$9999,4,FALSE)'.format(row=row)
+        question_label = '=VLOOKUP($A{row},\'MDD_Data_Variables\'!$A$2:$G$699999,4,FALSE)'.format(row=row)
         question_include_flag = df_prev.loc[question_name,'Include'] if question_name in df_prev.index.get_level_values(0) else ( 'x' if not aa_logic.should_exclude(mdmvariable) else '' )
-        question_validation = '=IF(NOT(ISBLANK($F{row})),VLOOKUP($A{row},\'MDD_Data_Variables\'!$A$2:$G$9999,7,FALSE),"")'.format(row=row)
+        question_validation = '=IF(NOT(ISBLANK($F{row})),VLOOKUP($A{row},\'MDD_Data_Variables\'!$A$2:$G$699999,7,FALSE),"")'.format(row=row)
         question_comment = df_prev.loc[question_name,'Comment'] if question_name in df_prev.index.get_level_values(0) else '-'
 
         df.loc[question_name] = [ question_type, question_shortname_current, question_shortname_final, question_label, question_include_flag, question_validation, question_comment ]
@@ -304,7 +394,109 @@ def build_variables_df(mdmvariables,mdd_data_variables_df,df_prev,config):
 
 
 
-def build_categories_df(variables,df,config):
+def build_analysisvalues_df(mdmvariables,df,mdd_data_categories_prev_df,config):
+    df = pd.DataFrame(
+        data = {
+            'ShortName': [],
+        },
+        index = pd.Series( [], name = 'Question' ),
+    )
+    row = 2
+    performance_counter = iter(util_perf.PerformanceMonitor(config={
+        'total_records': len(mdmvariables),
+        'report_frequency_records_count': 1,
+        'report_frequency_timeinterval': 14,
+        'report_text_pipein': 'progress reading analysis values for categories in variables',
+    }))
+
+    max_num_columns_reached = 0
+
+    for mdmvariable in mdmvariables:
+        if mdmvariable.Name=='':
+            continue
+        category_question_name = mdmvariable.FullName
+        next(performance_counter)
+        if mdmutils.is_iterative(mdmvariable) or mdmutils.has_own_categories(mdmvariable):
+
+            categories_data = []
+            category_shortname = '=VLOOKUP($A{row},MDD_Data_Variables!$A$2:$F$699999,5,FALSE)'.format(row=row)
+
+            for col_index_zerobased, mdmcategory in enumerate(mdmutils.list_mdmcategories(mdmvariable)):
+
+                col_index = 3+col_index_zerobased
+                col_letter = get_column_letter(col_index)
+                category_name = mdmcategory.Name
+                category_item_name ='{var}.Categories[{cat}]'.format(var=category_question_name,cat=category_name)
+                category_label = '=VLOOKUP(""&$A{row}&".Categories["&{col}{row}&"]",MDD_Data_Categories!$A$2:$G$699999,5,FALSE)'.format(row=row,col=col_letter)
+                category_validation = '=VLOOKUP(""&$A{row}&".Categories["&{col}{row}&"]",MDD_Data_Categories!$A$2:$G$699999,7,FALSE)'.format(row=row,col=col_letter)
+                
+                category_analysisvalue = None
+                try:
+                    if category_item_name in mdd_data_categories_prev_df.index.get_level_values(0):
+                        category_analysisvalue = aa_logic.sanitize_analysis_value(mdd_data_categories_prev_df.loc[category_item_name,'AnalysisValue'])
+                except Exception as e:
+                    raise e
+                    # pass
+                if category_analysisvalue is None:
+                    category_analysisvalue = aa_logic.sanitize_analysis_value(mdmcategory.Properties['Value'])
+                if category_analysisvalue is None:
+                    category_analysisvalue = ''
+
+                categories_data.append({
+                    'name': category_name,
+                    'label': category_label,
+                    'value': category_analysisvalue,
+                    'validation': category_validation,
+                })
+
+            # for n in range(0,len(categories_data)-max_num_columns_reached):
+            #     df.insert(len(df.columns),'CAT_{n}'.format(n=max_num_columns_reached+n+1),pd.Series([],index=[]))
+            df = pd.concat(
+                [
+                    df,
+                    pd.DataFrame(
+                        [],
+                        index=df.index,
+                        columns = [ 'CAT_{n}'.format(n=max_num_columns_reached+n+1) for n in range(0,len(categories_data)-max_num_columns_reached) ]
+                    )
+                ],
+                axis = 1
+            )
+            if max_num_columns_reached < len(categories_data):
+                max_num_columns_reached = len(categories_data)
+            
+            df.loc[category_question_name] = [
+                category_shortname,
+            ] \
+            + [
+                cat['name'] for cat in categories_data
+            ] \
+            + [''] * (max_num_columns_reached-len(categories_data))
+            row = row + 1
+            df.loc['{cat_name} : Label'.format(cat_name=category_question_name)] = [
+                '',
+            ] \
+            + [
+                cat['label'] for cat in categories_data
+            ] \
+            + [''] * (max_num_columns_reached-len(categories_data))
+            row = row + 1
+            df.loc['{cat_name} : Analysis Value'.format(cat_name=category_question_name)] = [
+                '',
+            ] \
+            + [
+                cat['value'] for cat in categories_data
+            ] \
+            + [''] * (max_num_columns_reached-len(categories_data))
+            row = row + 1
+            df.loc['{cat_name} : Validation'.format(cat_name=category_question_name)] = [
+                '',
+            ] \
+            + [
+                cat['validation'] for cat in categories_data
+            ] \
+            + [''] * (max_num_columns_reached-len(categories_data))
+            row = row + 1
     return df
 
 
@@ -316,8 +508,8 @@ def build_validationissues_df(variables,df_prev,config):
         },
         index = pd.Series( [], name = 'Where failed' ),
     )
-    df.loc['Variables'] = '=_xlfn.XLOOKUP(FALSE,Variables!$G$2:$G$9999,Variables!$A$2:$A$9999,0)'
-    df.loc['Categories'] = '=_xlfn.XLOOKUP(FALSE,MDD_Data_Categories!$G$2:$G$99999,MDD_Data_Categories!$A$2:$A$99999,0)'
+    df.loc['Variables'] = '=_xlfn.XLOOKUP(FALSE,Variables!$G$2:$G$699999,Variables!$A$2:$A$699999,0)'
+    df.loc['Categories'] = '=_xlfn.XLOOKUP(FALSE,MDD_Data_Categories!$G$2:$G$699999,MDD_Data_Categories!$A$2:$A$699999,0)'
     return df
 
 
@@ -341,14 +533,14 @@ def update_map(variables,dataframes,config):
     overview_df = build_overview_df(variables,overview_df,config)
     print('building "MDD_Data_Variables" (hidden) sheet...')
     mdd_data_variables_df = build_mdd_data_variables_df(variables,mdd_data_variables_df,config)
-    print('building "MDD_Data_Categories" (hidden) sheet...')
-    mdd_data_categories_df = build_mdd_data_categories_df(variables,mdd_data_categories_df,config)
     # print('building "MDD_Data_Validation" (hidden) sheet...')
     # mdd_data_validation_df = build_mdd_data_validation_df(variables,mdd_data_validation_df,config)
     print('building "Variables" sheet...')
     variables_df = build_variables_df(variables,mdd_data_variables_df,variables_df,config)
     print('building "Analysis Values" sheet...')
-    categories_df = build_categories_df(variables,categories_df,config)
+    categories_df = build_analysisvalues_df(variables,categories_df,mdd_data_categories_df,config)
+    print('building "MDD_Data_Categories" (hidden) sheet...')
+    mdd_data_categories_df = build_mdd_data_categories_df(variables,mdd_data_categories_df,config)
     print('building "Validation Issues Log" sheet...')
     validationissues_df = build_validationissues_df(variables,validationissues_df,config)
 

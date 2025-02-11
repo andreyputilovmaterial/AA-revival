@@ -7,7 +7,7 @@ SET "MDD_FILE=..\tests\working\current\R2400814M.mdd"
 
 
 @REM :: insert your files here
-SET "MAP_FILE=AnalysisAuthorNew.xlsx"
+SET "MAP_FILE="
 
 
 

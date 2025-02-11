@@ -121,9 +121,33 @@ def list_mdmcategories(mdmvariable,skip_shared_lists=False):
         elif mdmcat.Type==0:
             yield mdmcat
         else:
-            for f in list_mdmcategories(mdmcat):
-                yield f
+            # for f in list_mdmcategories(mdmcat):
+            #     yield f
+            yield from list_mdmcategories(mdmcat)
+
+def list_mdmcategories_with_slname(mdmvariable,skip_shared_lists=False):
+    for mdmcat in mdmvariable.Elements:
+        if mdmcat.IsReference:
+            try:
+                sl_name_clean = re.sub(r'[\^\\/\.]','',mdmcat.ReferenceName,flags=re.I|re.DOTALL)
+                mdmsharedlist = mdmvariable.Document.Types[sl_name_clean]
+                for _, mdmcat in list_mdmcategories_with_slname(mdmsharedlist):
+                    yield mdmsharedlist.Name, mdmcat # we return outer so that we are checking that values are unique within outer most list
+            except Exception as e:
+                raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=mdmcat.ReferenceName,e=e)) from e
+        elif mdmcat.Type==0:
+            yield None, mdmcat
+        else:
+            # for sl_name, mdmcat in list_mdmcategories_with_slname(mdmcat):
+            #     yield sl_name, mdmcat
+            yield from list_mdmcategories_with_slname(mdmcat)
 
 
 
+def list_mdmdatafields_recursively(mdmvariable):
+    for mdmfield in ( [f for f in mdmvariable.Fields] if has_mdmfield_nested_fields(mdmvariable) else [] ) + [f for f in mdmvariable.HelperFields]:
+        if is_data_item(mdmfield):
+            yield mdmfield
+        yield from list_mdmdatafields_recursively(mdmfield)
+    yield from []
 

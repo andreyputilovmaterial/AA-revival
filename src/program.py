@@ -180,8 +180,9 @@ def cli_program_update_map():
             variables = read_mdd.get_variables(mdd_filename)
             config['mdd_filename'] = mdd_filename if mdd_filename else ''
 
-    out_filename = map_filename if map_filename else '.\\AnalysisAuthorRevival.xlsx'
-    out_filename = out_filename + '.updated.xlsx' # TODO: debug, code for testing only, remove when done with testing
+    out_filename = map_filename if map_filename else ( ( Path(mdd_filename) if Path(mdd_filename).is_dir() else Path(mdd_filename).parents[0] ) if mdd_filename else Path('.') ) / 'AnalysisAuthorRevival.xlsx'
+    out_filename = Path(out_filename)
+    out_filename = out_filename.with_stem(out_filename.stem+'.updated') # TODO: debug, code for testing only, remove when done with testing
     assert out_filename, 'out filename is still missing, please check the code'
 
     print('{script_name}: working, updating the map'.format(script_name=script_name))

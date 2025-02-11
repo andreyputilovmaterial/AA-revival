@@ -34,9 +34,29 @@ def sanitize_shortname(name):
         return ''
     else:
         name = '{s}'.format(s=name)
-    name = re.sub(r'^\s*?(\d+)(?:\.\d*)\s*?$',lambda m: append3decimalplaces(m[1]),name,flags=re.I|re.DOTALL)
+    name = re.sub(r'^\s*?(\d+)(?:\.\d*)?\s*?$',lambda m: append3decimalplaces(m[1]),name,flags=re.I|re.DOTALL)
     return name
 
+
+
+def sanitize_analysis_value(value):
+    if value==0:
+        return 0
+    if not value:
+        return None
+    value = '{v}'.format(v=value)
+    value = re.sub(r'^\s*?(\d+)(?:\.0\d*)\s*?$',lambda m: m[1],value,flags=re.I|re.DOTALL)
+    try:
+        value = float(value)
+        try:
+            value_rounded = int(round(value))
+            if abs(value_rounded-value)<0.001:
+                value = value_rounded
+        except:
+            pass
+    except:
+        pass
+    return value
 
 
 
@@ -188,7 +208,7 @@ def read_shortname_aastyle_otherspec(mdmvar):
         # not sure, maybe I'll do
         shortname_parent_part = read_shortname_aastyle_logic_based_on_properties(mdmparent)
         # return Parent+'_Other_[L0]'
-        # result = '="'+shortname_parent_part + '_Other_' +'" & VLOOKUP("'+mdmcat.Name+'"\'MDD_Data_Categories\'!$A$2:$A$9999,6.FALSE)'
+        # result = '="'+shortname_parent_part + '_Other_' +'" & VLOOKUP("'+mdmcat.Name+'"\'MDD_Data_Categories\'!$A$2:$A$699999,6.FALSE)'
         result = shortname_parent_part + '_Other_' +'[L:{var}:{cat}]'.format(var=mdmparent.FullName,cat=mdmcat_matching_otherspec.Name)
         return result
     else:
