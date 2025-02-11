@@ -82,6 +82,8 @@ def format_sheet_overview(sheet):
     sheet['B2'].border = border_noborder
     sheet.conditional_formatting.add("B4",FormulaRule(formula=["=($B$4=\"Failed\")"],fill=fill_failed))
 
+
+
 def format_sheet_variables(sheet):
     fill_failed = PatternFill(start_color='ee0000',end_color='ee0000',fill_type='solid')
     fill_missing = PatternFill(start_color='eedd00',end_color='eedd00',fill_type='solid')
@@ -104,6 +106,8 @@ def format_sheet_variables(sheet):
             elif cell_index==2:
                 cell.font = color_shaded
 
+
+
 def format_sheet_analysisvalues(sheet):
     fill_categorynames = PatternFill(start_color='A9E0A5',end_color='A9E0A5',fill_type='solid')
     fill_shaded = PatternFill(start_color='e9e9e9',end_color='e9e9e9',fill_type='solid')
@@ -117,19 +121,32 @@ def format_sheet_analysisvalues(sheet):
     for row_num_within_data_range_zero_based, row in enumerate([r for r in sheet.rows][1:]):
         row_num_openpyxl = row_num_within_data_range_zero_based + 1
         if row_num_within_data_range_zero_based % 4 == 0:
+            # category name
             for cell_index, cell in enumerate(row):
+                # the first two cells are category name and short name, and then, column C, is the first category
+                # but we color the whole row, including 1st 2 cells
                 cell.fill = fill_categorynames
                 cell.alignment = alignment_center_top_wrap
         elif row_num_within_data_range_zero_based % 4 == 1:
+            # category label
+            # categories start at column C, so we skip 1st 2 columns
             for cell_index, cell in enumerate(row):
                 if cell_index>1:
                     cell.fill = fill_shaded
                     cell.alignment = alignment_center_top
         elif row_num_within_data_range_zero_based % 4 == 2:
+            # analysis values
+            # categories start at column C, so we skip 1st 2 columns
             for cell_index, cell in enumerate(row):
                 if cell_index>1:
                     cell.alignment = alignment_center_top
+                elif cell_index==1:
+                    # actually, I'll put some flag if the field is in exclusions here in that cell in column B
+                    cell.font = color_shaded
+                    cell.alignment = alignment_center_top
         elif row_num_within_data_range_zero_based % 4 == 3:
+            # validation flag
+            # categories start at column C, so we skip 1st 2 columns
             for cell_index, cell in enumerate(row):
                 if cell_index>1:
                     cell.font = color_shaded
@@ -144,9 +161,13 @@ def format_sheet_analysisvalues(sheet):
     sheet.column_dimensions['A'].width = 45
     sheet.column_dimensions['B'].width = 25
 
+
+
 def format_sheet_validationissues(sheet):
     sheet.column_dimensions['A'].width = 25
     sheet.column_dimensions['B'].width = 85    
+
+
 
 def format_with_stdstyles(sheet):
     fill_header = PatternFill(start_color='000000',end_color='000000',fill_type='solid')

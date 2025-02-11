@@ -179,6 +179,7 @@ def build_mdd_data_variables_df(mdmvariables,df_prev,config):
             return txt
     df = pd.DataFrame(
         data = {
+            'Question': [],
             'Question Type': [],
             'ShortName in MDD': [],
             'Label': [],
@@ -191,8 +192,16 @@ def build_mdd_data_variables_df(mdmvariables,df_prev,config):
             'Helper Validation - Does not start with a number' : [],
             'Helper Validation - Is unique' : [],
         },
-        index = pd.Series( [], name = 'Question' ),
+        index = None,
     )
+    # adding to dataframe row by row is very slow
+    # that's why
+    # I set key to None,
+    # I am adding all to a list with dicts
+    # and then concatenate the df with it
+    # and set index back, this is much faster
+    # (do we even need index here?)
+    data_add = []
     row = 2
     performance_counter = iter(util_perf.PerformanceMonitor(config={
         'total_records': len(mdmvariables),
@@ -243,7 +252,10 @@ def build_mdd_data_variables_df(mdmvariables,df_prev,config):
         question_validation_notstartszero = '=IF($F{row},NOT(OR(LEFT(H{row},"1")="0",LEFT(H{row},"1")="1",LEFT(H{row},"1")="2",LEFT(H{row},"1")="3",LEFT(H{row},"1")="4",LEFT(H{row},"1")="5",LEFT(H{row},"1")="6",LEFT(H{row},"1")="7",LEFT(H{row},"1")="8",LEFT(H{row},"1")="9")),"")'.format(row=row)
         question_validation_isunique = '=IF($F{row},(MATCH($A{row},$A$2:$A$699999,0)=MATCH($H{row},$H$2:$H$699999,0)),"")'.format(row=row)
 
-        df.loc[question_name] = [
+        row_add_list = [
+            
+            question_name,
+
             question_type,
             question_shortname,
             question_label,
@@ -258,7 +270,12 @@ def build_mdd_data_variables_df(mdmvariables,df_prev,config):
             question_validation_notstartszero,
             question_validation_isunique,
         ]
+        row_add = {col[0]: col[1] for col in zip(df.columns,row_add_list)}
+        data_add.append(row_add)
         row = row + 1
+    
+    df = pd.concat([df,pd.DataFrame(data_add)],ignore_index=True)
+    df.set_index('Question',inplace=True)
     return df
 
 
@@ -266,6 +283,7 @@ def build_mdd_data_variables_df(mdmvariables,df_prev,config):
 def build_mdd_data_categories_df(mdmvariables,df,config):
     df = pd.DataFrame(
         data = {
+            'Category_Path': [],
             'Variable': [],
             'Category': [],
             'SharedList': [],
@@ -282,14 +300,23 @@ def build_mdd_data_categories_df(mdmvariables,df,config):
             'Helper Field - Shared list name + analysis value': [],
             'Helper Field - Shared list name + category name': [],
         },
-        index = pd.Series( [], name = 'Category_Path' ),
+        index = None,
     )
+
+    # adding to dataframe row by row is very slow
+    # that's why
+    # I set key to None,
+    # I am adding all to a list with dicts
+    # and then concatenate the df with it
+    # and set index back, this is much faster
+    # (do we even need index here?)
+    data_add = []
     row = 2
     performance_counter = iter(util_perf.PerformanceMonitor(config={
         'total_records': len(mdmvariables),
         'report_frequency_records_count': 1,
         'report_frequency_timeinterval': 14,
-        'report_text_pipein': 'progress reading analysis values for categories in variables',
+        'report_text_pipein': 'progress reading analysis values and populating categories sheet',
     }))
     for mdmvariable in mdmvariables:
         if mdmvariable.Name=='':
@@ -319,7 +346,10 @@ def build_mdd_data_categories_df(mdmvariables,df,config):
                 category_validation_field_helper_slnamepluscatname = '=IF(NOT(ISBLANK($D{row})),IF(NOT(ISERROR(VALUE($F{row}))),""&$D{row}&"_"&$F{row},""&$D{row}&"_"&"missing"),"")'.format(row=row)
                 category_validation_field_helper_slnamepluscatvalue = '=IF(NOT(ISBLANK($D{row})),""&$D{row}&"_"&$C{row},"")'.format(row=row)
 
-                df.loc[category_item_name] = [
+                row_add_list = [
+
+                    category_item_name,
+
                     category_question_name,
                     category_name,
 
@@ -340,7 +370,12 @@ def build_mdd_data_categories_df(mdmvariables,df,config):
                     category_validation_field_helper_slnamepluscatname,
                     category_validation_field_helper_slnamepluscatvalue,
                 ]
+                row_add = {col[0]: col[1] for col in zip(df.columns,row_add_list)}
+                data_add.append(row_add)
                 row = row + 1
+    
+    df = pd.concat([df,pd.DataFrame(data_add)],ignore_index=True)
+    df.set_index('Category_Path',inplace=True)
     return df
 
 
@@ -353,6 +388,7 @@ def build_mdd_data_categories_df(mdmvariables,df,config):
 def build_variables_df(mdmvariables,mdd_data_variables_df,df_prev,config):
     df = pd.DataFrame(
         data = {
+            'Question': [],
             'Question Type': [],
             'Current ShortName': [],
             'Final ShortName': [],
@@ -361,8 +397,17 @@ def build_variables_df(mdmvariables,mdd_data_variables_df,df_prev,config):
             'Validation': [],
             'Comment': [],
         },
-        index = pd.Series( [], name = 'Question' ),
+        index = None,
     )
+
+    # adding to dataframe row by row is very slow
+    # that's why
+    # I set key to None,
+    # I am adding all to a list with dicts
+    # and then concatenate the df with it
+    # and set index back, this is much faster
+    # (do we even need index here?)
+    data_add = []
     row = 2
     performance_counter = iter(util_perf.PerformanceMonitor(config={
         'total_records': len(mdmvariables),
@@ -388,8 +433,24 @@ def build_variables_df(mdmvariables,mdd_data_variables_df,df_prev,config):
         question_validation = '=IF(NOT(ISBLANK($F{row})),VLOOKUP($A{row},\'MDD_Data_Variables\'!$A$2:$G$699999,7,FALSE),"")'.format(row=row)
         question_comment = df_prev.loc[question_name,'Comment'] if question_name in df_prev.index.get_level_values(0) else '-'
 
-        df.loc[question_name] = [ question_type, question_shortname_current, question_shortname_final, question_label, question_include_flag, question_validation, question_comment ]
+        row_add_list = [
+
+            question_name,
+            
+            question_type,
+            question_shortname_current,
+            question_shortname_final,
+            question_label,
+            question_include_flag,
+            question_validation,
+            question_comment,
+        ]
+        row_add = {col[0]: col[1] for col in zip(df.columns,row_add_list)}
+        data_add.append(row_add)
         row = row + 1
+    
+    df = pd.concat([df,pd.DataFrame(data_add)],ignore_index=True)
+    df.set_index('Question',inplace=True)
     return df
 
 
@@ -397,19 +458,27 @@ def build_variables_df(mdmvariables,mdd_data_variables_df,df_prev,config):
 def build_analysisvalues_df(mdmvariables,df,mdd_data_categories_prev_df,config):
     df = pd.DataFrame(
         data = {
+            'Question': [],
             'ShortName': [],
         },
-        index = pd.Series( [], name = 'Question' ),
+        index = None,
     )
+
+    # adding to dataframe row by row is very slow
+    # that's why
+    # I set key to None,
+    # I am adding all to a list with dicts
+    # and then concatenate the df with it
+    # and set index back, this is much faster
+    # (do we even need index here?)
+    data_add = []
     row = 2
     performance_counter = iter(util_perf.PerformanceMonitor(config={
         'total_records': len(mdmvariables),
         'report_frequency_records_count': 1,
         'report_frequency_timeinterval': 14,
-        'report_text_pipein': 'progress reading analysis values for categories in variables',
+        'report_text_pipein': 'building analysis values dataframe',
     }))
-
-    max_num_columns_reached = 0
 
     for mdmvariable in mdmvariables:
         if mdmvariable.Name=='':
@@ -419,7 +488,8 @@ def build_analysisvalues_df(mdmvariables,df,mdd_data_categories_prev_df,config):
         if mdmutils.is_iterative(mdmvariable) or mdmutils.has_own_categories(mdmvariable):
 
             categories_data = []
-            category_shortname = '=VLOOKUP($A{row},MDD_Data_Variables!$A$2:$F$699999,5,FALSE)'.format(row=row)
+            category_question_shortname = '=VLOOKUP($A{row},MDD_Data_Variables!$A$2:$F$699999,5,FALSE)'.format(row=row)
+            category_question_in_exclusions = '=IF(VLOOKUP($A{row},Variables!$A$2:$G$699999,6,FALSE)&""="","(excluded)","")'.format(row=row)
 
             for col_index_zerobased, mdmcategory in enumerate(mdmutils.list_mdmcategories(mdmvariable)):
 
@@ -448,55 +518,82 @@ def build_analysisvalues_df(mdmvariables,df,mdd_data_categories_prev_df,config):
                     'value': category_analysisvalue,
                     'validation': category_validation,
                 })
-
-            # for n in range(0,len(categories_data)-max_num_columns_reached):
-            #     df.insert(len(df.columns),'CAT_{n}'.format(n=max_num_columns_reached+n+1),pd.Series([],index=[]))
-            df = pd.concat(
-                [
-                    df,
-                    pd.DataFrame(
-                        [],
-                        index=df.index,
-                        columns = [ 'CAT_{n}'.format(n=max_num_columns_reached+n+1) for n in range(0,len(categories_data)-max_num_columns_reached) ]
-                    )
-                ],
-                axis = 1
-            )
-            if max_num_columns_reached < len(categories_data):
-                max_num_columns_reached = len(categories_data)
             
-            df.loc[category_question_name] = [
-                category_shortname,
-            ] \
-            + [
-                cat['name'] for cat in categories_data
-            ] \
-            + [''] * (max_num_columns_reached-len(categories_data))
-            row = row + 1
-            df.loc['{cat_name} : Label'.format(cat_name=category_question_name)] = [
-                '',
-            ] \
-            + [
-                cat['label'] for cat in categories_data
-            ] \
-            + [''] * (max_num_columns_reached-len(categories_data))
-            row = row + 1
-            df.loc['{cat_name} : Analysis Value'.format(cat_name=category_question_name)] = [
-                '',
-            ] \
-            + [
-                cat['value'] for cat in categories_data
-            ] \
-            + [''] * (max_num_columns_reached-len(categories_data))
-            row = row + 1
-            df.loc['{cat_name} : Validation'.format(cat_name=category_question_name)] = [
-                '',
-            ] \
-            + [
-                cat['validation'] for cat in categories_data
-            ] \
-            + [''] * (max_num_columns_reached-len(categories_data))
-            row = row + 1
+            data_add.append({
+                'Question':category_question_name,
+                'ShortName': category_question_shortname,
+                'is_excluded': category_question_in_exclusions,
+                'data': categories_data,
+            })
+            row = row + 4
+
+    cat_columns_count = max([len(record['data']) for record in data_add])
+    df = pd.concat(
+        [
+            df,
+            pd.DataFrame(
+                [],
+                index=df.index,
+                columns = [ 'CAT_{n}'.format(n=0+n+1) for n in range(0,cat_columns_count) ]
+            )
+        ],
+        axis = 1
+    )
+    
+    data_add_ready = []
+    for record in data_add:
+
+        # 1. a row with category name
+        row_add = [
+            record['Question'],
+            record['ShortName'],
+        ] \
+        + [
+            cell['name'] for cell in record['data']
+        ] \
+        + [''] * ( cat_columns_count - len(record['data']) )
+        data_add_ready.append(row_add)
+
+        # 2. a row with category label
+        row_add = [
+            '{var} : Label'.format(var=record['Question']),
+            '',
+        ] \
+        + [
+            cell['label'] for cell in record['data']
+        ] \
+        + [''] * ( cat_columns_count - len(record['data']) )
+        data_add_ready.append(row_add)
+
+        # 3. a row with analysis values
+        row_add = [
+            '{var} : Analysis Value'.format(var=record['Question']),
+            record['is_excluded'],
+        ] \
+        + [
+            cell['value'] for cell in record['data']
+        ] \
+        + [''] * ( cat_columns_count - len(record['data']) )
+        data_add_ready.append(row_add)
+
+        # 4. a row with category label
+        row_add = [
+            '{var} : Validation'.format(var=record['Question']),
+            '',
+        ] \
+        + [
+            cell['validation'] for cell in record['data']
+        ] \
+        + [''] * ( cat_columns_count - len(record['data']) )
+        data_add_ready.append(row_add)
+
+    data_add_ready = [
+        { col[0]: col[1] for col in zip(df.columns,record) } for record in data_add_ready
+    ]
+    data_add = data_add_ready
+
+    df = pd.concat([df,pd.DataFrame(data_add)],ignore_index=True)
+    df.set_index('Question',inplace=True)
     return df
 
 
