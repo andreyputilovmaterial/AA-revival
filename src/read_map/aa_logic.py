@@ -4,7 +4,7 @@
 import re
 
 
-from . import mdmutils
+from . import util_mdmvars
 
 
 
@@ -14,12 +14,12 @@ def should_exclude(mdmitem):
     def should_exclude_recursively(mdmitem):
         if should_exclude_based_on_props(mdmitem):
             return True
-        mdmparent = mdmutils.get_parent(mdmitem) if mdmutils.has_parent(mdmitem) else None
+        mdmparent = util_mdmvars.get_parent(mdmitem) if util_mdmvars.has_parent(mdmitem) else None
         if mdmparent:
             if should_exclude_recursively(mdmparent):
                 return True
         return False
-    if mdmutils.is_nocasedata(mdmitem):
+    if util_mdmvars.is_nocasedata(mdmitem):
         return True
     return should_exclude_recursively(mdmitem)
 
@@ -70,7 +70,7 @@ def read_shortname(mdmvar):
     try:
         shortname = read_shortname_aastyle_logic_based_on_properties(mdmvar)
     except AAFailedFindShortnameException:
-        if mdmutils.has_parent(mdmvar) and mdmutils.is_helper_field(mdmvar):
+        if util_mdmvars.has_parent(mdmvar) and util_mdmvars.is_helper_field(mdmvar):
             try:
                 shortname = read_shortname_aastyle_otherspec(mdmvar)
             except AAFailedFindShortnameException:
@@ -90,29 +90,29 @@ class AAFailedFindShortnameException(Exception):
     """AAFailedFindShortnameException"""
 def read_shortname_aastyle_logic_based_on_properties(mdmvar):
     try:
-        if not mdmutils.has_parent(mdmvar):
+        if not util_mdmvars.has_parent(mdmvar):
             result = sanitize_shortname(mdmvar.Properties['ShortName'])
             if not result:
                 raise AAFailedFindShortnameException('Failed to find shortname: {s}'.format(s=mdmvar.Name))
             return result
         else:
             count_sisters = 0
-            mdmparent = mdmutils.get_parent(mdmvar)
+            mdmparent = util_mdmvars.get_parent(mdmvar)
             if not mdmparent:
                 print('look at this') # TODO: debug
             is_numeric_grid = None
             is_text_grid = None # I am treating None and False differently here, which is not best design probably
             is_categorical_grid = None # I am treating None and False differently here, which is not best design probably
-            is_helper_field = mdmutils.is_helper_field(mdmvar)
+            is_helper_field = util_mdmvars.is_helper_field(mdmvar)
             if not is_helper_field:
                 for f in mdmparent.Fields:
-                    if mdmutils.is_dataless(f):
+                    if util_mdmvars.is_dataless(f):
                         continue
                     elif f.Name==mdmvar.Name:
                         continue
                     count_sisters = count_sisters + 1
-            if mdmutils.is_iterative(mdmparent):
-                if mdmutils.is_data_item(mdmvar):
+            if util_mdmvars.is_iterative(mdmparent):
+                if util_mdmvars.is_data_item(mdmvar):
                     if mdmvar.DataType==3:
                         if count_sisters==0:
                             if mdmvar.MaxValue==1:
@@ -164,7 +164,7 @@ def read_shortname_aastyle_logic_based_on_properties(mdmvar):
                     raise AAFailedFindShortnameException('Failed to find shortname: {s}'.format(s=mdmvar.Name))
                 return result
     except AAFailedFindShortnameException as e:
-        if mdmutils.has_parent(mdmvar) and mdmutils.is_helper_field(mdmvar):
+        if util_mdmvars.has_parent(mdmvar) and util_mdmvars.is_helper_field(mdmvar):
             result_part1 = mdmparent.Properties["ShortName"]
             result_part2 = mdmvar.Properties["ShortName"]
             if not result_part1:
@@ -190,11 +190,11 @@ def read_shortname_aastyle_otherspec(mdmvar):
     def is_equal_name(name1,name2):
         return '{n}'.format(n=name1).lower()=='{n}'.format(n=name2).lower()
     mdmcat_matching_otherspec = None
-    mdmparent = mdmutils.get_parent(mdmvar) if mdmutils.has_parent(mdmvar) else None
-    if mdmparent and mdmutils.is_helper_field(mdmvar):
+    mdmparent = util_mdmvars.get_parent(mdmvar) if util_mdmvars.has_parent(mdmvar) else None
+    if mdmparent and util_mdmvars.is_helper_field(mdmvar):
         # trying to find that "Other" category that matches that given field
-        if mdmutils.is_categorical(mdmparent):
-            for mdmcat in mdmutils.list_mdmcategories(mdmparent):
+        if util_mdmvars.is_categorical(mdmparent):
+            for mdmcat in util_mdmvars.list_mdmcategories(mdmparent):
                 if mdmcat.Flag==80 and mdmcat.OtherReference and is_equal_name(mdmcat.Name,mdmvar.Name):
                     mdmcat_matching_otherspec = mdmcat
     if mdmcat_matching_otherspec:
@@ -232,7 +232,7 @@ def read_shortname_fallback(mdmvar):
     
     sisters = []
     first_field = None
-    mdmparent = mdmutils.get_parent(mdmvar)
+    mdmparent = util_mdmvars.get_parent(mdmvar)
 
     is_impropert_field_own_name = False
     is_impropert_field_own_name = is_impropert_field_own_name or not field_prop_shortname
@@ -240,19 +240,19 @@ def read_shortname_fallback(mdmvar):
     already_used = [] # TODO: 
     is_impropert_field_own_name = is_impropert_field_own_name or already_used
 
-    if not mdmutils.has_parent(mdmvar):
+    if not util_mdmvars.has_parent(mdmvar):
         if is_impropert_field_own_name:
             return mdmvar.Name
         else:
             return field_prop_shortname
     else:
-        if mdmutils.is_helper_field(mdmvar):
+        if util_mdmvars.is_helper_field(mdmvar):
             return read_shortname(mdmparent) + '_' + ( field_prop_shortname if field_prop_shortname else mdmvar.Name )
         else:
             for f in mdmparent.Fields:
                 if not first_field:
                     first_field = f
-                if mdmutils.is_dataless(f):
+                if util_mdmvars.is_dataless(f):
                     continue
                 elif f.Name==mdmvar.Name:
                     continue
