@@ -81,13 +81,13 @@ def build_df(mdmvariables,df_prev,config):
                 category_analysisvalue_lookup_row_index = '_xlfn.MATCH( ${col_category}{row}, {category_analysisvalue_lookup_categorynames_array}, 0 )'.format(**substitutes,category_analysisvalue_lookup_categorynames_array=category_analysisvalue_lookup_categorynames_array)
 
                 category_label_mdd = mdmcategory.Label
-                category_label_prev = df_prev.loc[category_path,sheet.column_names['col_label_prev']] if df_prev and category_path in df_prev.index.get_level_values(0) else ''
+                category_label_prev = df_prev.loc[category_path,sheet.column_names['col_label']] if df_prev is not None and category_path in df_prev.index.get_level_values(0) else ''
                 category_label_lookup = '_xlfn.INDEX({where_looking_at}, {index_looking_for} )'.format(where_looking_at=category_analysisvalue_lookup_labels_array,index_looking_for=category_analysisvalue_lookup_row_index)
                 category_label = '=IF({val}&""="","",{val}&"")'.format(val=category_label_lookup)
                 # category_label = ArrayFormula(text=category_label,ref='')
 
                 category_analysisvalue_mdd = aa_logic.sanitize_analysis_value(mdmcategory.Properties['Value'])
-                category_analysisvalue_prev = df_prev.loc[category_path,sheet.column_names['col_analysisvalue_prev']] if df_prev and category_path in df_prev.index.get_level_values(0) else ''
+                category_analysisvalue_prev = df_prev.loc[category_path,sheet.column_names['col_analysisvalue']] if df_prev is not None and category_path in df_prev.index.get_level_values(0) else ''
                 category_analysisvalue_lookup = '_xlfn.INDEX({where_looking_at}, {index_looking_for} )'.format(where_looking_at=category_analysisvalue_lookup_analysisvalues_array,index_looking_for=category_analysisvalue_lookup_row_index)
                 category_analysisvalue = '=IF({val}&""="","",{val}&"")'.format(val=category_analysisvalue_lookup)
                 # category_analysisvalue = ArrayFormula(text=category_analysisvalue,ref='')

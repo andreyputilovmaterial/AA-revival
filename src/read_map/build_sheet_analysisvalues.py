@@ -31,6 +31,34 @@ else:
 
 
 
+def has_value_numeric(arg):
+    if pd.isna(arg):
+        return False
+    if arg is None:
+        return False
+    if arg==0:
+        return True
+    if arg == False:
+        return True # false evaluates to 0 which is numeric
+    if arg=='':
+        return False
+    return not not arg
+
+def has_value_text(arg):
+    if pd.isna(arg):
+        return False
+    if arg is None:
+        return False
+    if arg==0:
+        return True
+    if arg == False:
+        return False
+    if arg=='':
+        return False
+    return not not arg
+
+
+
 def build_df(mdmvariables,df_prev,config):
     # data = util_dataframe_wrapper.PandasDataframeWrapper(sheet.columns)
     data_add = []
@@ -88,7 +116,7 @@ def build_df(mdmvariables,df_prev,config):
                 category_label = \
                     ( \
                         df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_label_prev']] \
-                        if df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_label_prev']] \
+                        if has_value_text(df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_label_prev']]) \
                         else df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_label_mdd']] \
                     ) \
                     if df_prev is not None and category_path in df_prev.index.get_level_values(0) \
@@ -99,7 +127,7 @@ def build_df(mdmvariables,df_prev,config):
                 category_analysisvalue = \
                     ( \
                         df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_analysisvalue_prev']] \
-                        if df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_analysisvalue_prev']] \
+                        if has_value_numeric(df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_analysisvalue_prev']]) \
                         else df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_analysisvalue_mdd']] \
                     ) \
                     if df_prev is not None and category_path in df_prev.index.get_level_values(0) \

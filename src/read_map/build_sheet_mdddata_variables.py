@@ -64,7 +64,7 @@ def build_df(mdmvariables,df_prev,config):
             **sheet.column_letters,
             'row': data.get_working_row_number(),
             'sheet_name_variables': columns_sheet_variables.sheet_name,
-            'col_variablessheet_col_last': columns_sheet_variables.column_letters['col_validation'],
+            'col_variablessheet_col_last': columns_sheet_variables.column_letters[columns_sheet_variables.column_aliases[-1]],
             'col_variablessheet_label_vlookup_index': columns_sheet_variables.column_vlookup_index['col_label'],
             'col_variablessheet_shortname_vlookup_index': columns_sheet_variables.column_vlookup_index['col_shortname'],
             'col_variablessheet_include_vlookup_index': columns_sheet_variables.column_vlookup_index['col_include'],
@@ -86,28 +86,28 @@ def build_df(mdmvariables,df_prev,config):
 
         question_label_mdd = '{s}'.format(s=mdmvariable.Label)
 
-        question_label_prev = df_prev.loc[question_name,sheet.column_names['col_label_prev']] if df_prev and question_name in df_prev.index.get_level_values(0) else ''
+        question_label_prev = df_prev.loc[question_name,sheet.column_names['col_label']] if df_prev is not None and question_name in df_prev.index.get_level_values(0) else ''
 
         question_label_lookup = 'VLOOKUP($A{row},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_label_vlookup_index},FALSE)&""'.format(**substitutes)
         question_label = '=IF(ISERROR({val}),${col_label_mdd}{row}&"",{val})'.format(**substitutes,val=question_label_lookup)
 
         question_shortname_mdd = parse_shortname_formula(aa_logic.read_shortname(mdmvariable))
 
-        question_shortname_prev = parse_shortname_formula( df_prev.loc[question_name,sheet.column_names['col_shortname_prev']] if df_prev and question_name in df_prev.index.get_level_values(0) else '' )
+        question_shortname_prev = parse_shortname_formula( df_prev.loc[question_name,sheet.column_names['col_shortname']] if df_prev is not None and question_name in df_prev.index.get_level_values(0) else '' )
 
         question_shortname = '=' + '&", "&'.join([
             'VLOOKUP({item_name},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_shortname_vlookup_index},FALSE)&""'.format(**substitutes,item_name='$A{row}'.format(**substitutes) if item_name==question_name else item_name) for item_name in question_data_items_within_parent_wing
         ]) + '&""'
         question_shortname = question_shortname.replace('=&','=""&')
 
-        question_comment_prev = df_prev.loc[question_name,sheet.column_names['col_comment_prev']] if df_prev and question_name in df_prev.index.get_level_values(0) else ''
+        question_comment_prev = df_prev.loc[question_name,sheet.column_names['col_comment']] if df_prev is not None and question_name in df_prev.index.get_level_values(0) else ''
 
         question_comment_lookup = 'VLOOKUP($A{row},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_comment_vlookup_index},FALSE)'.format(**substitutes)
         question_comment = '=IF(ISERROR({val}),"",{val})'.format(val=question_comment_lookup)
 
         question_include_mdd = '' if not util_mdmvars.is_data_item(mdmvariable) else ( False if aa_logic.should_exclude(mdmvariable) else True )
 
-        question_include_prev = df_prev.loc[question_name,sheet.column_names['col_include_prev']] if df_prev and question_name in df_prev.index.get_level_values(0) else ''
+        question_include_prev = df_prev.loc[question_name,sheet.column_names['col_include']] if df_prev is not None and question_name in df_prev.index.get_level_values(0) else ''
 
         question_include_lookup = 'IF(' + '&'.join(['""']+[
             'VLOOKUP({item_name},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_include_vlookup_index},FALSE)&""'.format(**substitutes,item_name='$A{row}'.format(**substitutes) if item_name==question_name else item_name) for item_name in question_data_items_within_parent_wing

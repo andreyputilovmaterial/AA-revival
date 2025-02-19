@@ -1,6 +1,7 @@
 
 
 import re
+import pandas as pd
 
 
 
@@ -25,6 +26,34 @@ else:
     import util_dataframe_wrapper
     import columns_sheet_variables as sheet
     import columns_sheet_mdddata_variables
+
+
+
+def has_value_numeric(arg):
+    if pd.isna(arg):
+        return False
+    if arg is None:
+        return False
+    if arg==0:
+        return True
+    if arg == False:
+        return True # false evaluates to 0 which is numeric
+    if arg=='':
+        return False
+    return not not arg
+
+def has_value_text(arg):
+    if pd.isna(arg):
+        return False
+    if arg is None:
+        return False
+    if arg==0:
+        return True
+    if arg == False:
+        return False
+    if arg=='':
+        return False
+    return not not arg
 
 
 
@@ -65,7 +94,7 @@ def build_df(mdmvariables,df_prev,config):
         question_shortname = \
             ( \
                 df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_shortname_prev']] \
-                if df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_shortname_prev']] \
+                if has_value_text(df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_shortname_prev']]) \
                 else df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_shortname_mdd']] \
             ) \
             if df_prev is not None and question_name in df_prev.index.get_level_values(0) \
@@ -74,7 +103,7 @@ def build_df(mdmvariables,df_prev,config):
         question_label = \
             ( \
                 df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_label_prev']] \
-                if df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_label_prev']] \
+                if has_value_text(df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_label_prev']]) \
                 else df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_label_mdd']] \
             ) \
             if df_prev is not None and question_name in df_prev.index.get_level_values(0) \
@@ -83,7 +112,7 @@ def build_df(mdmvariables,df_prev,config):
         question_include_truefalse = \
             ( \
                 df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_include_prev']] \
-                if df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_include_prev']] \
+                if has_value_numeric(df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_include_prev']]) \
                 else df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_include_mdd']] \
             ) \
             if df_prev is not None and question_name in df_prev.index.get_level_values(0) \
@@ -92,7 +121,9 @@ def build_df(mdmvariables,df_prev,config):
         question_include = \
             '' if question_include_truefalse=='' \
             else ( 'x' if question_include_truefalse==True or re.match(r'^\s*?(?:true)\s*?$','{s}'.format(s=question_include_truefalse),flags=re.I|re.DOTALL) \
-            else ( '' if question_include_truefalse==False or re.match(r'^\s*?(?:false)\s*?$','{s}'.format(s=question_include_truefalse),flags=re.I|re.DOTALL) else '?' ) )
+            else ( '' if question_include_truefalse==False or re.match(r'^\s*?(?:false)\s*?$','{s}'.format(s=question_include_truefalse),flags=re.I|re.DOTALL) \
+            else ( '' if has_value_numeric(question_include_truefalse) \
+            else ( 'x' if question_include_truefalse else '' ) ) ) )
 
         question_validation_truefalse = 'VLOOKUP($A{row},\'{sheet_name_mdddata}\'!$A$2:${col_mdddata_validation}$999999,{col_mdddata_validation_vlookup_index},FALSE)'.format(**substitutes)
         question_validation = '=IF({val},"","Failed")'.format(val=question_validation_truefalse)
