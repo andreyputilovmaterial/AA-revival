@@ -10,17 +10,17 @@ import pandas as pd
 
 if __name__ == '__main__':
     # run as a program
-    import produce_savprep_mrs
+    import write_mrs
     import read_mdd.list_variables as read_mdd
     import read_map
 elif '.' in __name__:
     # package
-    from . import produce_savprep_mrs
+    from . import write_mrs
     from .read_mdd import list_variables as read_mdd
     from . import read_map
 else:
     # included with no parent package
-    import produce_savprep_mrs
+    import write_mrs
     import read_mdd.list_variables as read_mdd
     import read_map
 
@@ -86,13 +86,26 @@ def cli_program_produce_savprep_mrs():
         out_filename = Path(args.out)
     else:
         raise FileNotFoundError('Out filename: file not provided; please use --out option')
-
-    print('{script_name}: working, generating mrs script'.format(script_name=script_name))
-    result = produce_savprep_mrs.generate_savprep_mrs_scripts(variables,map_df,config)
     
-    print('{script_name}: saving as "{fname}"'.format(fname=out_filename,script_name=script_name))
-    with open(out_filename, "w",encoding='utf-8') as outfile:
-        outfile.write(result)
+    out_filename_template = out_filename.with_stem(out_filename.stem+'')
+    out_filename_include_addin = out_filename.with_stem(out_filename.stem+'.INCLUDE')
+    out_filename = None
+    config['out_filename_template_fullpath'] = '{s}'.format(s=Path(out_filename_template).resolve())
+    config['out_filename_include_addin_fullpath'] = '{s}'.format(s=Path(out_filename_include_addin).resolve())
+    config['out_filename_template_filenamepart'] = '{s}'.format(s=Path(out_filename_template).name)
+    config['out_filename_include_addin_filenamepart'] = '{s}'.format(s=Path(out_filename_include_addin).name)
+
+    print('{script_name}: working, generating mrs script, template'.format(script_name=script_name))
+    result_template = write_mrs.generate_savprep_mrs_template(config)
+    print('{script_name}: working, generating mrs script, include addin'.format(script_name=script_name))
+    result_include_addin = write_mrs.generate_savprep_mrs_include_addin(variables,map_df,config)
+    
+    print('{script_name}: saving as "{fname}"'.format(fname=out_filename_template,script_name=script_name))
+    with open(out_filename_template, "w",encoding='utf-8') as outfile:
+        outfile.write(result_template)
+    print('{script_name}: saving as "{fname}"'.format(fname=out_filename_include_addin,script_name=script_name))
+    with open(out_filename_include_addin, "w",encoding='utf-8') as outfile:
+        outfile.write(result_include_addin)
 
     time_finish = datetime.now()
     print('{script_name}: finished at {dt} (elapsed {duration})'.format(dt=time_finish,duration=time_finish-time_start,script_name=script_name))
@@ -199,7 +212,7 @@ def cli_program_update_map():
 
 def cli():
     programs_to_run = {
-        'produce_savprep_mrs': cli_program_produce_savprep_mrs,
+        'write_mrs': cli_program_produce_savprep_mrs,
         'update_map': cli_program_update_map,
     }
     try:
