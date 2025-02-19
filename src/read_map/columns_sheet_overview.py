@@ -10,7 +10,7 @@ columns = [
 
 column_aliases = [
     'col_index',
-    'col_value',
+    'col_analysisvalue',
 ]
 
 column_names = {

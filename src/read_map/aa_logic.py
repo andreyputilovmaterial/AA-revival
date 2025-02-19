@@ -208,7 +208,7 @@ def read_shortname_aastyle_otherspec(mdmvar):
         # not sure, maybe I'll do
         shortname_parent_part = read_shortname_aastyle_logic_based_on_properties(mdmparent)
         # return Parent+'_Other_[L0]'
-        # result = '="'+shortname_parent_part + '_Other_' +'" & VLOOKUP("'+mdmcat.Name+'"\'MDD_Data_Categories\'!$A$2:$A$699999,6.FALSE)'
+        # result = '="'+shortname_parent_part + '_Other_' +'" & VLOOKUP("'+mdmcat.Name+'"\'MDD_Data_Categories\'!$A$2:$A$999999,6.FALSE)'
         result = shortname_parent_part + '_Other_' +'[L:{var}:{cat}]'.format(var=mdmparent.FullName,cat=mdmcat_matching_otherspec.Name)
         return result
     else:

@@ -64,27 +64,27 @@ def build_df(mdmvariables,df_prev,config):
 
         question_shortname = \
             ( \
-                df_prev.loc[mdmvariable.FullName,columns_sheet_mdddata_variables.column_names['col_shortname_prev']] \
-                if df_prev.loc[mdmvariable.FullName,columns_sheet_mdddata_variables.column_names['col_shortname_prev']] \
-                else df_prev.loc[mdmvariable.FullName,columns_sheet_mdddata_variables.column_names['col_shortname_mdd']] \
+                df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_shortname_prev']] \
+                if df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_shortname_prev']] \
+                else df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_shortname_mdd']] \
             ) \
             if df_prev is not None and question_name in df_prev.index.get_level_values(0) \
             else ''
 
         question_label = \
             ( \
-                df_prev.loc[mdmvariable.FullName,columns_sheet_mdddata_variables.column_names['col_label_prev']] \
-                if df_prev.loc[mdmvariable.FullName,columns_sheet_mdddata_variables.column_names['col_label_prev']] \
-                else df_prev.loc[mdmvariable.FullName,columns_sheet_mdddata_variables.column_names['col_label_mdd']] \
+                df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_label_prev']] \
+                if df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_label_prev']] \
+                else df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_label_mdd']] \
             ) \
             if df_prev is not None and question_name in df_prev.index.get_level_values(0) \
             else ''
 
         question_include_truefalse = \
             ( \
-                df_prev.loc[mdmvariable.FullName,columns_sheet_mdddata_variables.column_names['col_include_prev']] \
-                if df_prev.loc[mdmvariable.FullName,columns_sheet_mdddata_variables.column_names['col_include_prev']] \
-                else df_prev.loc[mdmvariable.FullName,columns_sheet_mdddata_variables.column_names['col_include_mdd']] \
+                df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_include_prev']] \
+                if df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_include_prev']] \
+                else df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_include_mdd']] \
             ) \
             if df_prev is not None and question_name in df_prev.index.get_level_values(0) \
             else ''
@@ -98,7 +98,7 @@ def build_df(mdmvariables,df_prev,config):
         question_validation = '=IF({val},"","Failed")'.format(val=question_validation_truefalse)
 
         question_comment = \
-            df_prev.loc[mdmvariable.FullName,columns_sheet_mdddata_variables.column_names['col_comment_prev']] \
+            df_prev.loc[question_name,columns_sheet_mdddata_variables.column_names['col_comment_prev']] \
             if df_prev is not None and question_name in df_prev.index.get_level_values(0) \
             else ''
 

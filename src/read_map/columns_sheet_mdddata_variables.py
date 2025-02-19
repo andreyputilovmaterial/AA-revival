@@ -23,6 +23,8 @@ columns = [
     'Helper Validation - Not blank',
     'Helper Validation - Is alphanumeric',
     'Helper Validation - Does not start with a number',
+    'Helper Validation - Length check (32 characters max)',
+    'Helper Validation - Reserved keywords check',
     'Helper Validation - Is unique',
 ]
 
@@ -46,6 +48,8 @@ column_aliases = [
     'col_helper_validation_notblank',
     'col_helper_validation_isalphanumeric',
     'col_helper_validation_notstartswithnumber',
+    'col_helper_validation_lengthcheck',
+    'col_helper_validation_reservedkeywordcheck',
     'col_helper_validation_isunique',
 ]
 

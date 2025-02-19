@@ -51,9 +51,9 @@ def format_sheet_analysisvalues(sheet):
                     cell.font = color_shaded
                     cell.alignment = alignment_center_top
         # sheet.row_dimensions[row_num_openpyxl].height = row_height * 2
-    sheet.conditional_formatting.add("$C$2:$ZZ$699999",FormulaRule(formula=['=IF(ISNUMBER(SEARCH("Analysis Value",$A2)),IF(NOT(ISBLANK(C1)),IF(NOT(ISBLANK(C2)),IF(ISERROR(C3),TRUE,NOT(C3)),FALSE),FALSE),FALSE)'],fill=fill_failed))
-    # sheet.conditional_formatting.add("$C$2:$ZZ$699999",FormulaRule(formula=['=IF(ISNUMBER(SEARCH("Analysis Value",$A2)),IF(NOT(ISBLANK(C1)),IF(ISBLANK(C2),TRUE,FALSE),FALSE),FALSE)'],fill=fill_missing))
-    sheet.conditional_formatting.add("$C$2:$ZZ$699999",FormulaRule(formula=['IF(ISNUMBER(SEARCH("Analysis Value",$A2)),IF(NOT(ISBLANK(C1)),IF(ISBLANK(C2),IF(ISERROR(C3),TRUE,NOT(C3)),FALSE),FALSE),FALSE)'],fill=fill_missing))
+    sheet.conditional_formatting.add("$C$2:$ZZ$999999",FormulaRule(formula=['=IF(ISNUMBER(SEARCH("Analysis Value",$A2)),IF(NOT(ISBLANK(C1)),IF(NOT(ISBLANK(C2)),IF(ISERROR(C3),TRUE,NOT(C3)),FALSE),FALSE),FALSE)'],fill=fill_failed))
+    # sheet.conditional_formatting.add("$C$2:$ZZ$999999",FormulaRule(formula=['=IF(ISNUMBER(SEARCH("Analysis Value",$A2)),IF(NOT(ISBLANK(C1)),IF(ISBLANK(C2),TRUE,FALSE),FALSE),FALSE)'],fill=fill_missing))
+    sheet.conditional_formatting.add("$C$2:$ZZ$999999",FormulaRule(formula=['IF(ISNUMBER(SEARCH("Analysis Value",$A2)),IF(NOT(ISBLANK(C1)),IF(ISBLANK(C2),IF(ISERROR(C3),TRUE,NOT(C3)),FALSE),FALSE),FALSE)'],fill=fill_missing))
     for col in range(sheet.min_column,sheet.max_column+1):
         col_letter = get_column_letter(col)
         sheet.column_dimensions[col_letter].width = 14
