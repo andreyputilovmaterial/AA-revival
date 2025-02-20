@@ -54,13 +54,13 @@ def build_df(variables,df_prev,config):
     #     df.drop(df.index,inplace=True)
     df = util_dataframe_wrapper.PandasDataframeWrapper(columns_sheet_overview.columns).to_df()
     mdd_filename_part = Path(config['mdd_filename']).stem
-    mdd_refresh_datetime = config['datetime']
+    mdd_reload_datetime = config['datetime']
     config_datetime_timezone_info_included = False
     try:
-        mdd_refresh_datetime = mdd_refresh_datetime.strftime('%m/%d/%Y %I:%M:%S %p %Z')
+        mdd_reload_datetime = mdd_reload_datetime.strftime('%m/%d/%Y %I:%M:%S %p %Z')
         if ZoneInfo:
             try:
-                mdd_refresh_datetime_naive = config['datetime']
+                mdd_reload_datetime_naive = config['datetime']
                 try:
                     system_tz = ZoneInfo(time.tzname[0])
                 except Exception as e:
@@ -68,16 +68,16 @@ def build_df(variables,df_prev,config):
                         system_tz = ZoneInfo(get_localzone_name())
                     else:
                         raise e
-                mdd_refresh_datetime_local = mdd_refresh_datetime_naive.replace(tzinfo=system_tz)
-                mdd_refresh_datetime_local = mdd_refresh_datetime_local.strftime('%m/%d/%Y %I:%M:%S %p %Z')
-                mdd_refresh_datetime = mdd_refresh_datetime_local
+                mdd_reload_datetime_local = mdd_reload_datetime_naive.replace(tzinfo=system_tz)
+                mdd_reload_datetime_local = mdd_reload_datetime_local.strftime('%m/%d/%Y %I:%M:%S %p %Z')
+                mdd_reload_datetime = mdd_reload_datetime_local
                 config_datetime_timezone_info_included = True
             except:
                 pass
     except:
         pass
     if not config_datetime_timezone_info_included:
-        mdd_refresh_datetime = '{dt} (time configured as system time on a local machine where the script was running, without timezone information)'.format(dt=mdd_refresh_datetime)
+        mdd_reload_datetime = '{dt} (time configured as system time on a local machine where the script was running, without timezone information)'.format(dt=mdd_reload_datetime)
     mdmdoc = variables[0]
     df.loc['Tool'] = [CONFIG_TOOL_NAME]
     df.loc['MDD'] = [mdd_filename_part]
@@ -94,7 +94,7 @@ def build_df(variables,df_prev,config):
         ), 
     ]
     df.loc['MDD path'] = [config['mdd_filename']]
-    df.loc['MDD last refreshed'] = [mdd_refresh_datetime]
+    df.loc['MDD metadata last read, date and time'] = [mdd_reload_datetime]
     df.loc['JobNumber property from MDD'] = [mdmdoc.Properties['JobNumber']]
     df.loc['StudyName propertty from MDD'] = [mdmdoc.Properties['StudyName']]
     df.loc['Client property from MDD'] = [mdmdoc.Properties['Client']]

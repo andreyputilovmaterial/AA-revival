@@ -212,6 +212,9 @@ def cli_program_update_map():
             except Exception as e:
                 raise FileNotFoundError('Can\'t read MDD file name from map: {e}'.format(e=e)) from e
             mdd_filename = Path(mdd_filename)
+            if not mdd_filename.is_absolute():
+                # relative to AA Excel Map file
+                mdd_filename = ( ( Path(map_filename) if Path(map_filename).is_dir() else Path(map_filename).parents[0] ) if map_filename else Path('.') ) / mdd_filename
             mdd_filename = '{fname}'.format(fname=mdd_filename.resolve())
             if not(Path(mdd_filename).is_file()):
                 raise FileNotFoundError('file not found: {fname}'.format(fname=mdd_filename))
