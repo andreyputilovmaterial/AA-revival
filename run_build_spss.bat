@@ -41,13 +41,21 @@ DEL "Outputs\R%PROJECT_NUM%M.sav"
 DEL "Outputs\R%PROJECT_NUM%M.mdd"
 DEL "Dara\S%PROJECT_NUM%M.mdd"
 
+
+ECHO - Apply AA definitions
+CALL run_aarevival_apply_write_mrs
+if %ERRORLEVEL% NEQ 0 ( echo ERROR: Failure && pause && exit /b %errorlevel% )
+
+
 ECHO - 601_SavPrepRevival
 mrscriptcl 601_SavPrepRevival.mrs
 if %ERRORLEVEL% NEQ 0 ( echo ERROR: Failure && pause && exit /b %errorlevel% )
 
+
 ECHO - 602_SCreate
 dmsrun 602_SCreate.dms
 if %ERRORLEVEL% NEQ 0 ( echo ERROR: Failure && pause && exit /b %errorlevel% )
+
 
 IF NOT EXIST "%DELIVERY_LOCATION_TEAM%\" (
     MKDIR "%DELIVERY_LOCATION_TEAM%\"
