@@ -48,8 +48,10 @@ Dim DataSource
 
 'Limit space reserved for Other-Specify Text fields.
 '	Regular text fields, Other-specs that already have max lengths, and non-text Other-specs will not be touched.
-#Define TRUNCATE_OTHER_TEXT 	TRUE
-#Define TRUNCATED_OTHER_SIZE	100
+#Define TRUNCATE_OTHER_TEXT            TRUE
+#Define TRUNCATED_OTHER_SIZE           100
+#Define TRUNCATED_RESPONDENTID_TEXT    TRUE
+#Define TRUNCATED_RESPONDENTID_SIZE    150
 
 '-------------------------------------------------------------------------------------------------------------------------
 
@@ -106,20 +108,17 @@ For Each DataSource In mDocument.DataSources
 	End If
 Next
 
-'PRESERVE MORE THAN THE DEFAULT 50 CHARACTERS IN RESPONDENT.ID
-if mDocument.Fields.Exist["Respondent"] then
-    mDocument.Fields["Respondent"].Fields["ID"].MaxValue = 150
-end if
-
-
 
 
 Sub SetAlias(oField,Shortname)
-    Dim oVariableInstance, ShouldSkip, iLevel, oIndexes, iIndexLooper, oParent, oIterationCat, sAlias
-    Dim sVarMiddle
+    Dim oVariableInstance, ShouldSkip, iLevel, oIndexes, iIndexLooper, oParent, oIterationCat, sAlias, oAlias, iCounter, oSubAliases
+    Dim sBaseAliasPart, sOwnIterativeAliasPart, sLoopIterativeAliasPart, sCategoricalIterativeAliasPart
+    If oField.DataType = 2 Then ' 2 == mr.Text
+    	TruncateTextSize(oField)
+    End If
     For each oVariableInstance in oField.Variables
-	    sVarMiddle = ""
         ShouldSkip = False
+	    sLoopIterativeAliasPart = ""
         iLevel = oVariableInstance.Indices.Count
         If iLevel>0 Then
             Set oParent = oVariableInstance
@@ -137,93 +136,55 @@ Sub SetAlias(oField,Shortname)
                         Else
                             Set oIterationCat = oParent.Categories[StripBraces(oIndexes[iIndexLooper - 1])]
                         End If
-                        sVarMiddle = ConvertToTripleDigitsText(oIterationCat.Properties["Value"]) + IIF(len(sVarMiddle) > 0, "_","") + sVarMiddle
+                        sLoopIterativeAliasPart = ConvertToTripleDigitsText(oIterationCat.Properties["Value"]) + "_" + sLoopIterativeAliasPart
                     Else
                         'Otherwise, just convert three digit Index
-                        sVarMiddle = ConvertToTripleDigitsText(oIndexes[iIndexLooper - 1]) + IIF(len(sVarMiddle) > 0, "_","") + sVarMiddle
+                        sLoopIterativeAliasPart = ConvertToTripleDigitsText(oIndexes[iIndexLooper - 1]) + "_" + sLoopIterativeAliasPart
                     End If
                 Next
             End If
         End If
         If Not ShouldSkip Then
-            sAlias = SHortname + IIF(len(sVarMiddle) > 0, "_","") + sVarMiddle
+        	sBaseAliasPart = Shortname
+        	sOwnIterativeAliasPart = "" ' TODO:
+        	sCategoricalIterativeAliasPart = "" ' TODO:
+            sAlias = sBaseAliasPart + sCategoricalIterativeAliasPart + sLoopIterativeAliasPart + sOwnIterativeAliasPart
             oVariableInstance.AliasName = sAlias
+        	If oVariableInstance.DataType = 3 Then ' 3 == Mr.Categorical
+        		If oVariableInstance.MaxValue <> 1 Then ' Multi-punch
+        			oVariableInstance.MaxValue = Null ' 'NOTE: Removing the MaxValue from the Category, so that it exports as Dichotomous without an Issue
+        			oAlias = oVariableInstance.CreateAliasName [sAlias]
+        			Set oSubAliases = oVariableInstance.CreateSubAliases [ oAlias ] [ oVariableInstance.Categories.Count ]
+        			iCounter = 0
+        			For Each oIterationCat in oVariableInstance.Categories
+        				oVariableInstance.SubAliasName[iCounter] = oAlias + "_" + ConvertToTripleDigitsText(oVariableInstance.Categories[iCounter].Properties["Value"])
+        				iCounter = iCounter + 1
+        			Next
+        		End If
+        	End If
         End If
     Next
 End Sub
 
 
 
-
-''Top-Down Variable Processing
-'Sub ProcessVariable(Q)
-'	Dim oField, oSubField
-'
-'    set oField = Q
-'    Select Case oField.ObjectTypeValue
-'        Case 0 'Regular variable
-'            'Check if Field needs to be processed at all
-'            If oField.DataType=3 Then
-'                SetupAnalysisValuesForSav(oField)
-'            End If
-'            SetupVariableForSAV(oField)
-'        Case 1 'Array (Loop)						
-'            'Process each Field and send alias prefix with it
-'            SetupAnalysisValuesForSav(oField)
-'            ProcessVariable(oField.Fields)
-'        Case 2 'Grid						
-'            'Process each Field and send alias prefix with it
-'            SetupAnalysisValuesForSav(oField)
-'            ProcessVariable(oField.Fields)
-'        Case 3 'Class (Block, e.g. Bipolars)
-'            ProcessVariable(oField.Fields)
-'        Case 16
-'            ' Skip
-'        Case Else
-'            Debug.Log("Unexpected field type found. If you are using an MDD straight from Excel Author, make sure to open and save in Professional before running this script. Found: " + oField.FullName + " - ObjectTypeValue = " + ctext(oField.ObjectTypeValue))
-'            Debug.Echo("Unexpected field type found. If you are using an MDD straight from Excel Author, make sure to open and save in Professional before running this script. Found: " + oField.FullName + " - ObjectTypeValue = " + ctext(oField.ObjectTypeValue))
-'            err.Raise(-999,"Unexpected field type found. If you are using an MDD straight from Excel Author, make sure to open and save in Professional before running this script. Found: " + oField.FullName + " - ObjectTypeValue = " + ctext(oField.ObjectTypeValue))
-'    End Select
-'    If oField.ObjectTypeValue=1 or oField.ObjectTypeValue=2 or oField.ObjectTypeValue=3 or oField.ObjectTypeValue=16 Then
-'        For each oField in Q.Fields
-'            ProcessVariable(Q)
-'        Next
-'    End If
-'    if oField.ObjectTypeValue<>16 Then
-'        For each oField in Q.HelperFields
-'            ProcessVariable(Q)
-'        Next
-'    End If
-'
-'End Sub
-'
-'Sub SetupVariableForSAV(oField)
-'    Dim oVariableInstance
-'    For each oVariableInstance in oField.Variables
-'        SetAlias(oVariableInstance)
-'    Next
-'End Sub
-'
-'Sub SetupAnalysisValuesForSav(oField)
-'    Dim oVariableInstance
-'    For each oVariableInstance in oField.Categories
-'        SetAlias(oVariableInstance)
-'    Next
-'End Sub
-'
-'Sub SetAlias(oVariable)
-'    Dim ccat
-'    Select Case oVariable.FullName
-'        Case "Timers.CustomSection[..].Seconds"
-'            ccat = ccat
-'        ' {{\{CODE_ADD}\}}
-'        Case Else
-'            debug.Log("Field not processed: "+ctext(oVariable.FullName)+"")
-'            debug.Echo("Field not processed: "+ctext(oVariable.FullName)+"")
-'            err.Raise(-999,"Field not processed: "+ctext(oVariable.FullName)+"")
-'    End Select
-'End Sub
-'
+Sub TruncateTextSize(oField)
+	If oField.FullName = "Respondent.ID" Then
+		'PRESERVE MORE THAN THE DEFAULT 50 CHARACTERS IN RESPONDENT.ID
+#if TRUNCATED_RESPONDENTID_TEXT
+		oField.MaxValue = TRUNCATED_RESPONDENTID_SIZE
+#endif
+	ElseIf oField.MaxValue is not null Then
+		' already has max lengths - don't touch
+	ElseIf oFIeld.Parent.ObjectTypeValue = 0 Then
+		' is a HelperFielf
+#if TRUNCATE_OTHER_TEXT
+		oField.MaxValue = TRUNCATED_OTHER_SIZE
+#endif
+	Else
+		' regulat text field - do not touch
+	End If
+End Sub
 
 
 
@@ -239,12 +200,9 @@ End Function
 
 
 
-
 Function StripBraces(sString)
 	StripBraces = Replace(Replace(sString,"{",""),"}","")
 End Function
-
-
 
 
 

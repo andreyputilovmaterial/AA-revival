@@ -54,7 +54,3 @@ IF NOT EXIST "%DELIVERY_LOCATION_TEAM%\" (
 )
 COPY "Outputs\R%PROJECT_NUM%M.sav" "%DELIVERY_LOCATION_TEAM%\"
 
-REM :: create html
-REM :: in Data\Final\ folder
-CALL build_mddhtml
-if %ERRORLEVEL% NEQ 0 ( echo ERROR: Failure && pause && exit /b %errorlevel% )
