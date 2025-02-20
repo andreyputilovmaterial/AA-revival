@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 import argparse
 from pathlib import Path
 import traceback
+import shutil
 
 import pandas as pd
 
@@ -23,6 +24,18 @@ else:
     import write_mrs
     import read_mdd.list_variables as read_mdd
     import read_map
+
+
+
+
+def create_backup(out_filename,config):
+    script_run_datetime = config['datetime']
+    script_run_datetime = script_run_datetime.strftime('_%Y%m%d_%I%M%S_Z')
+    out_bkp_filename = out_filename.with_stem(out_filename.stem+'_backup_'+script_run_datetime)
+    from_file = Path(out_filename)
+    to_file = Path(out_bkp_filename)
+    shutil.copy(from_file,to_file)
+
 
 
 
@@ -54,6 +67,7 @@ def cli_program_produce_savprep_mrs():
         type=str,
         required=False
     )
+    parser.add_argument( '--write-template', help='Do we need to create a 601_SavPrepRevival.mrs?', type=str, required=False, )
     args, _ = parser.parse_known_args()
     
     variables = None
@@ -79,6 +93,9 @@ def cli_program_produce_savprep_mrs():
         raise FileNotFoundError('Map: file not provided; please use --map option')
 
     config = {}
+    config['need_write_template'] = False
+    if args.write_template:
+        config['need_write_template'] = True
     config['datetime'] = time_start
 
     out_filename = None
@@ -95,14 +112,19 @@ def cli_program_produce_savprep_mrs():
     config['out_filename_template_filenamepart'] = '{s}'.format(s=Path(out_filename_template).name)
     config['out_filename_include_addin_filenamepart'] = '{s}'.format(s=Path(out_filename_include_addin).name)
 
-    print('{script_name}: working, generating mrs script, template'.format(script_name=script_name))
-    result_template = write_mrs.generate_savprep_mrs_template(config)
+    
+    if config['need_write_template']:
+        
+        print('{script_name}: working, generating mrs script, template'.format(script_name=script_name))
+        result_template = write_mrs.generate_savprep_mrs_template(config)
+
+        print('{script_name}: saving as "{fname}"'.format(fname=out_filename_template,script_name=script_name))
+        with open(out_filename_template, "w",encoding='utf-8') as outfile:
+            outfile.write(result_template)
+
     print('{script_name}: working, generating mrs script, include addin'.format(script_name=script_name))
     result_include_addin = write_mrs.generate_savprep_mrs_include_addin(variables,map_df,config)
-    
-    print('{script_name}: saving as "{fname}"'.format(fname=out_filename_template,script_name=script_name))
-    with open(out_filename_template, "w",encoding='utf-8') as outfile:
-        outfile.write(result_template)
+
     print('{script_name}: saving as "{fname}"'.format(fname=out_filename_include_addin,script_name=script_name))
     with open(out_filename_include_addin, "w",encoding='utf-8') as outfile:
         outfile.write(result_include_addin)
@@ -140,6 +162,7 @@ def cli_program_update_map():
         type=str,
         required=False
     )
+    parser.add_argument( '--no-map-backup', help='Suppress creating a backup?', type=str, required=False, )
     args, _ = parser.parse_known_args()
     
     mdd_filename = None
@@ -164,6 +187,9 @@ def cli_program_update_map():
     
     config = {}
     config['datetime'] = time_start
+    config['skip_map_backup'] = False
+    if args.no_map_backup:
+        config['skip_map_backup'] = True
 
     if args.config_fill_analysisvalues:
         config['map_options'] = {
@@ -195,7 +221,8 @@ def cli_program_update_map():
 
     out_filename = map_filename if map_filename else ( ( Path(mdd_filename) if Path(mdd_filename).is_dir() else Path(mdd_filename).parents[0] ) if mdd_filename else Path('.') ) / 'AnalysisAuthorRevival.xlsx'
     out_filename = Path(out_filename)
-    out_filename = out_filename.with_stem(out_filename.stem+'.updated') # TODO: debug, code for testing only, remove when done with testing
+    if not config['skip_map_backup']:
+        create_backup(out_filename,config)
     assert out_filename, 'out filename is still missing, please check the code'
 
     print('{script_name}: working, updating the map'.format(script_name=script_name))

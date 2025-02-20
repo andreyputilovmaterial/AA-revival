@@ -210,6 +210,11 @@ def generate_savprep_mrs_include_addin(mddvariables,dataframes,config):
 
     result = ''
 
+    result = result + '\n'
+    result = result + '\' AnalysisAuthorRevival\n'
+    result = result + '\' Generated: {t} (time configured as system time on a local machine where the script was running, without timezone information)\n'.format(t=config['datetime'])
+    result = result + '\n'
+
     for variable in mddvariables:
         if variable.Name=='':
             continue

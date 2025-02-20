@@ -55,6 +55,7 @@ def build_df(variables,df_prev,config):
     df = util_dataframe_wrapper.PandasDataframeWrapper(columns_sheet_overview.columns).to_df()
     mdd_filename_part = Path(config['mdd_filename']).stem
     mdd_refresh_datetime = config['datetime']
+    config_datetime_timezone_info_included = False
     try:
         mdd_refresh_datetime = mdd_refresh_datetime.strftime('%m/%d/%Y %I:%M:%S %p %Z')
         if ZoneInfo:
@@ -70,10 +71,13 @@ def build_df(variables,df_prev,config):
                 mdd_refresh_datetime_local = mdd_refresh_datetime_naive.replace(tzinfo=system_tz)
                 mdd_refresh_datetime_local = mdd_refresh_datetime_local.strftime('%m/%d/%Y %I:%M:%S %p %Z')
                 mdd_refresh_datetime = mdd_refresh_datetime_local
+                config_datetime_timezone_info_included = True
             except:
                 pass
     except:
         pass
+    if not config_datetime_timezone_info_included:
+        mdd_refresh_datetime = '{dt} (time configured as system time on a local machine where the script was running, without timezone information)'.format(dt=mdd_refresh_datetime)
     mdmdoc = variables[0]
     df.loc['Tool'] = [CONFIG_TOOL_NAME]
     df.loc['MDD'] = [mdd_filename_part]

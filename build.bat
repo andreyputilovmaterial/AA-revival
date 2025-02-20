@@ -25,10 +25,12 @@ ECHO program.cli() >> dist/mdmtools_aarevival.py
 ECHO # print('out of mdmtools_aarevival') >> dist/mdmtools_aarevival.py
 
 PUSHD dist
-COPY ..\run_loadmap.bat .\run_aarevival_load.bat
-powershell -Command "(gc 'run_aarevival_load.bat' -encoding 'Default') -replace '(dist[/\\])?mdmtools_aarevival.py', 'mdmtools_aarevival.py' | Out-File -encoding 'Default' 'run_aarevival_load.bat'"
-COPY ..\run_applymap.bat .\run_aarevival_apply.bat
-powershell -Command "(gc 'run_aarevival_apply.bat' -encoding 'Default') -replace '(dist[/\\])?mdmtools_aarevival.py', 'mdmtools_aarevival.py' | Out-File -encoding 'Default' 'run_aarevival_apply.bat'"
+COPY ..\run_loadmap.bat .\run_aarevival_reload_map.bat
+COPY ..\run_applymap.bat .\run_aarevival_apply_write_mrs.bat
+powershell -Command "(gc 'run_aarevival_reload_map.bat' -encoding 'Default') -replace '(dist[/\\])?mdmtools_aarevival.py', 'mdmtools_aarevival.py' | Out-File -encoding 'Default' 'run_aarevival_reload_map.bat'"
+powershell -Command "(gc 'run_aarevival_apply_write_mrs.bat' -encoding 'Default') -replace '(dist[/\\])?mdmtools_aarevival.py', 'mdmtools_aarevival.py' | Out-File -encoding 'Default' 'run_aarevival_apply_write_mrs.bat'"
+COPY ..\run_build_spss.bat .\run_aarevival_build_spss.bat
+COPY ..\601_SavPrepRevival.mrs .\601_SavPrepRevival.mrs
 POPD
 
 

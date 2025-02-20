@@ -2,12 +2,16 @@
 SETLOCAL enabledelayedexpansion
 
 
+SET PROJECT_NUM=2400814M
+
+
+
 @REM :: insert your files here
-SET "MDD_FILE=..\tests\working\current\R2400814M.mdd"
+SET "MDD_FILE=.\Data\R%PROJECT_NUM%.mdd"
 
 
 @REM :: insert your files here
-SET "MAP_FILE="
+SET "MAP_FILE=.\AnalysisAuthorRevival.xlsx"
 
 
 
@@ -16,21 +20,21 @@ SET "MAP_FILE="
 
 
 
-@REM :: a config option
-@REM :: 3 possible choices here
-@REM :: you can set it to:
-@REM :: 1. "from_mdd_or_blank"
-@REM ::    - it means, analysis values are filled with what was stored in MDD, and what is missing is left blank
-@REM ::    this is useful if you have AA applied and you need to load the definitions - you need to keep using analysis values that were saved from AA
-@REM :: 2. "from_mdd_and_autofill"
-@REM ::    - it means, analysis values are filled with what is stored in MDD, and the rest is auto-filled
-@REM ::    this is an autofill option but is based on analysis values that were stored in MDD
-@REM :: 3. "autofill_override"
-@REM ::    - it means, all analysis values are filled automatically starting from 1
-@REM ::    this is useful when we have a fresh MDD that never had AA map before, and if it has analysis values possibly coming from WA MDD - they should be ignored
-@REM :: 4. "blank"
-@REM ::    - leave all blank, no auto-population, so that the team will have to review and fill
-SET "CONFIG_FILL_ANALYSISVALUES=from_mdd_or_blank"
+@REM @REM :: a config option
+@REM @REM :: 3 possible choices here
+@REM @REM :: you can set it to:
+@REM @REM :: 1. "from_mdd_or_blank"
+@REM @REM ::    - it means, analysis values are filled with what was stored in MDD, and what is missing is left blank
+@REM @REM ::    this is useful if you have AA applied and you need to load the definitions - you need to keep using analysis values that were saved from AA
+@REM @REM :: 2. "from_mdd_and_autofill"
+@REM @REM ::    - it means, analysis values are filled with what is stored in MDD, and the rest is auto-filled
+@REM @REM ::    this is an autofill option but is based on analysis values that were stored in MDD
+@REM @REM :: 3. "autofill_override"
+@REM @REM ::    - it means, all analysis values are filled automatically starting from 1
+@REM @REM ::    this is useful when we have a fresh MDD that never had AA map before, and if it has analysis values possibly coming from WA MDD - they should be ignored
+@REM @REM :: 4. "blank"
+@REM @REM ::    - leave all blank, no auto-population, so that the team will have to review and fill
+@REM SET "CONFIG_FILL_ANALYSISVALUES=from_mdd_or_blank"
 
 
 

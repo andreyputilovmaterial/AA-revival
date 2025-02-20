@@ -1,7 +1,4 @@
 
-
-
-TEMPLATE = r"""
 ' -----------------------------------------------------------------------
 ' IPS Table Shell
 '
@@ -31,7 +28,7 @@ Dim DataSource
 	1 --> RM (merged) data,
 	2 --> STK (stacked) data
 !'
-#Define DATA_FILE_TO_USE 0
+#Define DATA_FILE_TO_USE 1
 
 '=======================================================
 #if DATA_FILE_TO_USE == 0
@@ -102,7 +99,7 @@ For Each DataSource In mDocument.DataSources
 		MyConfiguration.MaxLength = 50
 
 		' ProcessVariable(mDocument)
-#include "{{{addin_file_path}}}"
+#include "601_SavPrepRevival.INCLUDE.mrs"
 
 		Set MyGenerator = Null
 		Set MyConfiguration = Null
@@ -265,4 +262,3 @@ mDocument.Save(S_MDD)
 mDocument.Close()
 '--------------------------------------------------------------------------------------------------------------------------------------------
 
-"""
