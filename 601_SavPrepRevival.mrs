@@ -136,10 +136,10 @@ Sub SetAlias(oField,Shortname)
                         Else
                             Set oIterationCat = oParent.Categories[StripBraces(oIndexes[iIndexLooper - 1])]
                         End If
-                        sLoopIterativeAliasPart = ConvertToTripleDigitsText(oIterationCat.Properties["Value"]) + "_" + sLoopIterativeAliasPart
+                        sLoopIterativeAliasPart = "_" + ConvertToTripleDigitsText(oIterationCat.Properties["Value"]) + sLoopIterativeAliasPart
                     Else
                         'Otherwise, just convert three digit Index
-                        sLoopIterativeAliasPart = ConvertToTripleDigitsText(oIndexes[iIndexLooper - 1]) + "_" + sLoopIterativeAliasPart
+                        sLoopIterativeAliasPart = "_" + ConvertToTripleDigitsText(oIndexes[iIndexLooper - 1]) + sLoopIterativeAliasPart
                     End If
                 Next
             End If

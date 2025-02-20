@@ -34,7 +34,7 @@ SET "OUT_PATH=./601_SavPrepRevival.mrs"
 
 
 ECHO -
-ECHO 1. read MDD and update the map
+ECHO 1. read the map and produce the mrs script
 python dist/mdmtools_aarevival.py --program write_mrs --mdd "%MDD_FILE%" --map "%MAP_FILE%" --out "%OUT_PATH%"
 if %ERRORLEVEL% NEQ 0 ( echo ERROR: Failure && pause && goto CLEANUP && exit /b %errorlevel% )
 
