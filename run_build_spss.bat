@@ -2,7 +2,7 @@
 
 
 
-SET PROJECT_NUM=2400814
+SET PROJECT_NUM=2400814M
 
 
 
@@ -24,10 +24,10 @@ SET "DELIVERY_LOCATION_TEAM=.\FinalSpss\%DELIVERYNAME_TEAM%"
 
 
 
-DEL "Outputs\R%PROJECT_NUM%M.spss"
-DEL "Outputs\R%PROJECT_NUM%M.sav"
-DEL "Outputs\R%PROJECT_NUM%M.mdd"
-DEL "Dara\S%PROJECT_NUM%M.mdd"
+DEL "Outputs\R%PROJECT_NUM%.spss"
+DEL "Outputs\R%PROJECT_NUM%.sav"
+DEL "Outputs\R%PROJECT_NUM%.mdd"
+DEL "Dara\S%PROJECT_NUM%.mdd"
 
 
 
@@ -36,10 +36,10 @@ DEL "Dara\S%PROJECT_NUM%M.mdd"
 
 
 
-DEL "Outputs\R%PROJECT_NUM%M.spss"
-DEL "Outputs\R%PROJECT_NUM%M.sav"
-DEL "Outputs\R%PROJECT_NUM%M.mdd"
-DEL "Dara\S%PROJECT_NUM%M.mdd"
+DEL "Outputs\R%PROJECT_NUM%.spss"
+DEL "Outputs\R%PROJECT_NUM%.sav"
+DEL "Outputs\R%PROJECT_NUM%.mdd"
+DEL "Dara\S%PROJECT_NUM%.mdd"
 
 
 ECHO - Apply AA definitions
@@ -60,5 +60,5 @@ if %ERRORLEVEL% NEQ 0 ( echo ERROR: Failure && pause && exit /b %errorlevel% )
 IF NOT EXIST "%DELIVERY_LOCATION_TEAM%\" (
     MKDIR "%DELIVERY_LOCATION_TEAM%\"
 )
-COPY "Outputs\R%PROJECT_NUM%M.sav" "%DELIVERY_LOCATION_TEAM%\"
+COPY "Outputs\R%PROJECT_NUM%.sav" "%DELIVERY_LOCATION_TEAM%\"
 
