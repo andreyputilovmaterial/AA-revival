@@ -14,20 +14,13 @@ set "DELIVERYNAME_TEAM=%MM%.%DD%.%YYYY%"
 REM set "DELIVERYNAME_LOCAL=%YYYY%%MM%%DD%_%HHMMSS%_script"
 
 
+@REM :: you can set a delivery location - files will be copied automatically - unsuppress this line and several lines at the bottom
+@REM :: date in folder name is generated autocatically
 @REM SET "DELIVERY_LOCATION_TEAM=P:\150_Jagou\150_BES Fiscal Year 25 Global\IPS\SPSS\%DELIVERYNAME_TEAM%"
-REM SET "DELIVERY_LOCATION_LOCAL=Outputs\%DELIVERYNAME_LOCAL%%"
-SET "DELIVERY_LOCATION_TEAM=.\FinalSpss\%DELIVERYNAME_TEAM%"
 
 
 
 
-
-
-
-DEL "Outputs\R%PROJECT_NUM%.spss"
-DEL "Outputs\R%PROJECT_NUM%.sav"
-DEL "Outputs\R%PROJECT_NUM%.mdd"
-DEL "Dara\S%PROJECT_NUM%.mdd"
 
 
 
@@ -57,8 +50,10 @@ dmsrun 602_SavCreateUnicode.dms
 if %ERRORLEVEL% NEQ 0 ( echo ERROR: Failure && pause && exit /b %errorlevel% )
 
 
-IF NOT EXIST "%DELIVERY_LOCATION_TEAM%\" (
-    MKDIR "%DELIVERY_LOCATION_TEAM%\"
-)
-COPY "Outputs\R%PROJECT_NUM%.sav" "%DELIVERY_LOCATION_TEAM%\"
+
+@REM :: copy to project team location - unsuppress if needed
+@REM IF NOT EXIST "%DELIVERY_LOCATION_TEAM%\" (
+@REM     MKDIR "%DELIVERY_LOCATION_TEAM%\"
+@REM )
+@REM COPY "Outputs\R%PROJECT_NUM%.sav" "%DELIVERY_LOCATION_TEAM%\"
 

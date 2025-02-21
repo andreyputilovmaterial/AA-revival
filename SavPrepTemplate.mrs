@@ -31,7 +31,7 @@ Dim DataSource
 	1 --> RM (merged) data,
 	2 --> STK (stacked) data
 !'
-#Define DATA_FILE_TO_USE 1
+#Define DATA_FILE_TO_USE 0
 
 '=======================================================
 #if DATA_FILE_TO_USE == 0

@@ -169,8 +169,28 @@ def cli_program_update_map():
         type=str,
         required=False
     )
+    parser.add_argument(
+        '--create-map-if-not-exists',
+        help='Config option indicating if a map should be created if a linked map file is not found',
+        type=str,
+        required=False
+    )
     parser.add_argument( '--no-map-backup', help='Suppress creating a backup?', type=str, required=False, )
     args, _ = parser.parse_known_args()
+    
+    config = {}
+    config['datetime'] = time_start
+    config['skip_map_backup'] = False
+    if args.no_map_backup:
+        config['skip_map_backup'] = True
+    config['create_map_if_not_exists'] = False
+    if args.create_map_if_not_exists:
+        config['create_map_if_not_exists'] = True
+
+    if args.config_fill_analysisvalues:
+        config['map_options'] = {
+            'process_analysis_values': args.config_fill_analysisvalues,
+        }
     
     mdd_filename = None
     variables = None
@@ -187,24 +207,19 @@ def cli_program_update_map():
     if args.map:
         map_filename = Path(args.map)
         map_filename = '{fname}'.format(fname=map_filename.resolve())
-        if not(Path(map_filename).is_file()):
-            raise FileNotFoundError('file not found: {fname}'.format(fname=map_filename))
-        print('{script_name}: reading map "{fname}"'.format(fname=map_filename,script_name=script_name))
-        map_df = read_map.load(map_filename)
-    
-    config = {}
-    config['datetime'] = time_start
-    config['skip_map_backup'] = False
-    if args.no_map_backup:
-        config['skip_map_backup'] = True
-
-    if args.config_fill_analysisvalues:
-        config['map_options'] = {
-            'process_analysis_values': args.config_fill_analysisvalues,
-        }
+        if Path(map_filename).is_file():
+            print('{script_name}: reading map "{fname}"'.format(fname=map_filename,script_name=script_name))
+            map_df = read_map.load(map_filename)
+        else:
+            if 'create_map_if_not_exists' in config and config['create_map_if_not_exists']:
+                pass
+            else:
+                raise FileNotFoundError('file not found: {fname}'.format(fname=map_filename))
     
     config['mdd_file_provided'] = not not mdd_filename
     config['map_file_provided'] = not not map_filename
+    config['mdd_file_exists'] = not not map_df
+    config['map_file_exists'] = not not variables
     config['mdd_filename'] = mdd_filename if mdd_filename else ''
     config['map_filename'] = map_filename if map_filename else ''
 
@@ -232,8 +247,10 @@ def cli_program_update_map():
 
     out_filename = map_filename if map_filename else ( ( Path(mdd_filename) if Path(mdd_filename).is_dir() else Path(mdd_filename).parents[0] ) if mdd_filename else Path('.') ) / 'AnalysisAuthorRevival.xlsx'
     out_filename = Path(out_filename)
-    if not config['skip_map_backup']:
-        create_backup(out_filename,config)
+    if map_df:
+        if not config['skip_map_backup']:
+            print('{script_name}: creating backup of the map: {map}'.format(script_name=script_name,map=out_filename))
+            create_backup(out_filename,config)
     assert out_filename, 'out filename is still missing, please check the code'
 
     print('{script_name}: working, updating the map'.format(script_name=script_name))
