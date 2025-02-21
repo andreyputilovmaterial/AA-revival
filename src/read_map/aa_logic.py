@@ -224,8 +224,17 @@ def read_shortname_fallback(mdmvar):
         is_improper_name = is_improper_name or not not re.match(r'^\s*?((?:Top|T|Bottom|B))(\d*)((?:B|Box))\s*?$',name,flags=re.I)
         is_improper_name = is_improper_name or not not re.match(r'^\s*?(?:GV|Rank|Num)\s*?$',name,flags=re.I)
         return is_improper_name
+    
+    # if that's a root mdmdocument item, not a real field, skip
+    # this should not happen, that's here just for safety
     if mdmvar.Name=='':
         return None
+    
+    # let's check for some known types
+    full_name_check = mdmvar.FullName
+    if full_name_check.startswith('Respondent.') or full_name_check.startswith('DataCollection.'):
+        return re.sub(r'[^\w]+','_',full_name_check,flags=re.I|re.DOTALL)
+
     field_prop_shortname = sanitize_shortname(mdmvar.Properties['ShortName'])
     if not field_prop_shortname:
         field_prop_shortname = mdmvar.Name

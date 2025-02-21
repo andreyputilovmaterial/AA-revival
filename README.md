@@ -45,14 +45,14 @@ As of current implementation, the script does not write definitions to MDD, it d
 
 As of current implementation, the script generates a piece of mrs code that is included in 601_SavPrep.mrs. Maybe this step can be moved to python as well - why are generating piece of mrs code that produces S-MDD when we can just create S-MDD instead?
 
-Also, the scripts do not have any validation. All validation is in Excel and it's just informative. Yeah, the page will be red, saying that some items are bad... But if we run the script, it runs. The reasons are: 1. I think having that validation in Excel is enough to control quality, 2. if some definitions are incompatible, dms scripts will break with proper message. 3. Also, I said I don't have any validation in my scripts - in fact I have, the scripts will stop if definitions for some of the variables or categories are missing in the map - this is considered to be a critical issue.
+Also, the scripts do not have any validation. All validation is in Excel and it's just informative. Yeah, the page will be red, saying that some items are bad... But if we run the script, it runs. The reasons are: 1. I think having that validation in Excel is enough to control quality, 2. if some definitions are incompatible, dms scripts will break with proper message. For example, if a shortname is used twice, there is an error "Alias already used", if the name is not a valid name there is also an error... 3. Also, I said I don't have any validation in my scripts - in fact I have, the scripts will stop if definitions for some of the variables or categories are missing in the map - this is considered to be a critical issue.
 
 All these scripts can be added to your workflow programmatically. It no longer requires pressing any button in Excel manually, all steps can be called programmatically.
 
 Scripts do not have to be in one folder. That .py bundle should probably be moved somewhere to ./Includes, or to some other subfolder.
 
 ## Runtimes ##
-Runtimes are super fast. Validation takes 1 second. Map reload within several minutes too. 601_SavPrep.mrs takes couple minutes to run. Then, 602_SavCreate.dms takes \~40-90 minutes to produce a 5 GB SPSS.
+Runtimes are super fast. Validation takes 1 second. Map reload within 1-2 minutes too. 601_SavPrep.mrs takes couple minutes to run. Then, 602_SavCreate.dms takes \~40-90 minutes to produce a 5 GB SPSS.
 
 ## Why this was created ##
 As I see, in trackers with big size of data, Flatout can't handle generating SPSS and can't allocate enough memory and process the file.

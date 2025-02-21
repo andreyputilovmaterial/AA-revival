@@ -41,9 +41,13 @@ CONFIG_VALIDATION_MAX_SHORTNAME_LENGTH = 50
 
 def helper_parse_shortname_formula(txt):
     def repl_cat_analysisvalue(matches):
-        return '"&VLOOKUP("{var}.Categories[{cat}]",\'{sheet_name}\'!$A2:${col_last}999999,{vlookup_index},FALSE)&"'.format(var=matches[1],cat=matches[2],sheet_name=columns_sheet_mdddata_categories.sheet_name,col_last=columns_sheet_mdddata_categories.column_letters['col_analysisvalue'],vlookup_index=columns_sheet_mdddata_categories.column_vlookup_index['col_analysisvalue'])
+        substitute_part = 'VLOOKUP("{var}.Categories[{cat}]",\'{sheet_name}\'!$A2:${col_last}999999,{vlookup_index},FALSE)'.format(var=matches[1],cat=matches[2],sheet_name=columns_sheet_mdddata_categories.sheet_name,col_last=columns_sheet_mdddata_categories.column_letters['col_analysisvalue'],vlookup_index=columns_sheet_mdddata_categories.column_vlookup_index['col_analysisvalue'])
+        substitute_part = 'IF(LEN({A})=1,"00"&{A},IF(LEN({A})=2,"0"&{A},{A}))'.format(A=substitute_part)
+        return '"&{formula}&"'.format(formula=substitute_part)
     def repl_var_shortname(matches):
-        return '"&VLOOKUP("{var}",\'{sheet_name}\'!$A2:${col_last}999999,{vlookup_index},FALSE)&"'.format(var=matches[1],sheet_name=sheet.sheet_name,col_last=sheet.column_letters['col_shortname'],vlookup_index=sheet.column_vlookup_index['col_shortname'])
+        substitute_part = 'VLOOKUP("{var}",\'{sheet_name}\'!$A2:${col_last}999999,{vlookup_index},FALSE)'.format(var=matches[1],sheet_name=sheet.sheet_name,col_last=sheet.column_letters['col_shortname'],vlookup_index=sheet.column_vlookup_index['col_shortname'])
+        substitute_part = 'IF(LEN({A})=1,"00"&{A},IF(LEN({A})=2,"0"&{A},{A}))'.format(A=substitute_part)
+        return '"&{formula}&"'.format(formula=substitute_part)
     if '[L:' in txt:
         assert '"' not in txt, '\'"\' in shortname, please check'
         return '="{f}"'.format(f=re.sub(r'\[L:(.*?)\]',repl_var_shortname,re.sub(r'\[L:(.*?):(.*?)\]',repl_cat_analysisvalue,txt,flags=re.I|re.DOTALL),flags=re.I|re.DOTALL))
