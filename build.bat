@@ -25,13 +25,21 @@ ECHO program.cli() >> dist/mdmtools_aarevival.py
 ECHO # print('out of mdmtools_aarevival') >> dist/mdmtools_aarevival.py
 
 PUSHD dist
+
+@REM :: copy BAT files
 COPY ..\run_loadmap.bat .\run_aarevival_reload_map.bat
 COPY ..\run_applymap.bat .\run_aarevival_apply_write_mrs.bat
 powershell -Command "(gc 'run_aarevival_reload_map.bat' -encoding 'Default') -replace '(dist[/\\])?mdmtools_aarevival.py', 'mdmtools_aarevival.py' | Out-File -encoding 'Default' 'run_aarevival_reload_map.bat'"
 powershell -Command "(gc 'run_aarevival_apply_write_mrs.bat' -encoding 'Default') -replace '(dist[/\\])?mdmtools_aarevival.py', 'mdmtools_aarevival.py' | Out-File -encoding 'Default' 'run_aarevival_apply_write_mrs.bat'"
 COPY ..\run_build_spss.bat .\run_aarevival_build_spss.bat
+
+@REM :: copy templates
+@REM :: mrs script MUST be in utf-8 with BOM
+@REM :: dms script - this is not necessary but I'll copy it with BOM for consistency, as editing it in professional will have it saved with utf-8 with BOM anyway
 @REM COPY ..\601_SavPrepRevival.mrs .\601_SavPrepRevival.mrs
 python ..\build_copy_with_utf8_bom.py  ..\SavPrepTemplate.mrs .\601_SavPrepRevival.mrs
+python ..\build_copy_with_utf8_bom.py  ..\SavCreateTemplate.dms .\602_SavCreateUnicode.dms
+
 POPD
 
 

@@ -52,8 +52,8 @@ mrscriptcl 601_SavPrepRevival.mrs
 if %ERRORLEVEL% NEQ 0 ( echo ERROR: Failure && pause && exit /b %errorlevel% )
 
 
-ECHO - 602_SCreate
-dmsrun 602_SCreate.dms
+ECHO - 602_SavCreateUnicode
+dmsrun 602_SavCreateUnicode.dms
 if %ERRORLEVEL% NEQ 0 ( echo ERROR: Failure && pause && exit /b %errorlevel% )
 
 

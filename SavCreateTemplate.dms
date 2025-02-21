@@ -1,0 +1,96 @@
+' -----------------------------------------------------------------------
+' IPS Table Shell Version 7.0.3
+'
+' -----------------------------------------------------------------------
+' Take an MDD that was transformed using 601_SavPrep and export the data to a SAV
+'
+' -----------------------------------------------------------------------
+' Author Notes (optional):
+' -
+' -----------------------------------------------------------------------
+
+#include "Includes/Globals.mrs"
+#include "Includes/DMS/LoggingPrep.dms"
+#define SCRIPT_NAME	 "602_SavCreate.dms"
+
+'!
+	Define data file to be converted to SPSS below using DATA_FILE_TO_USE.
+	0 --> R data
+	1 --> RM (merged) data,
+	2 --> STK (stacked) data
+!'
+#Define DATA_FILE_TO_USE 0
+
+'=======================================================
+#if DATA_FILE_TO_USE == 0
+	#define MDD_FILE 			Sav_MDD
+	#define DATA_FILE 			Sav_DATA
+	#define SAV_FULL_PATH 		SAV_DATA_FULL_PATH
+	#define SAV_SOURCE_DATA 	PROCESSED_DATA
+	#Define S_MDD 				SAV_Prep_MDD
+#elif DATA_FILE_TO_USE == 1
+	#define MDD_FILE 			Sav_MDD_MERGE
+	#define DATA_FILE 			Sav_DATA_MERGE
+	#define SAV_FULL_PATH 		SAV_DATA_FULL_PATH_MERGE
+	#define SAV_SOURCE_DATA 	POSTMERGED_DATA
+	#Define S_MDD 				SAV_Prep_MDD_MERGE
+#elif DATA_FILE_TO_USE == 2
+	#define MDD_FILE 			Sav_MDD_STK
+	#define DATA_FILE 			Sav_DATA_STK
+	#define SAV_FULL_PATH 		SAV_DATA_FULL_PATH_STK
+	#define SAV_SOURCE_DATA 	STK_DATA
+	#Define S_MDD 				SAV_Prep_MDD_STK
+#endif
+'========================================================
+' -----------------------------------------------------------------------
+InputDatasource(Input)
+	ConnectionString = "Provider = mrOleDB.Provider.2; Data Source = " + DIMENSIONS_DSC + "; Initial Catalog = '" + S_MDD + "'; Location = " + SAV_SOURCE_DATA
+	SelectQuery = "SELECT * FROM VDATA WHERE DataCollection.Status.ContainsAny({Completed})"
+	' Use the following if you want to use the debug where clause
+	' "SELECT * FROM VDATA DEBUG_WHERE"
+End InputDatasource
+
+OutputDatasource(OutputSAV)
+	' SavLanguage=ENU;SavCodePage=65001; for Unicode support
+	' https://support.unicomsi.com/manuals/intelligence/751/index.html#page/UNICOM%20Intelligence/wnew_whatsnewinddl_1145432.html
+	' https://support.unicomsi.com/manuals/intelligence/751/index.html#page/DDL%2Fdtmd_availabledscs_5722945.html%23ww5722945
+    ConnectionString = "Provider = mrOleDB.Provider.2;Mr Init MDM Context='ANALYSIS'; Data Source = " + Sav_DSC + "; Location = " + DATA_FILE + ";MR Init Custom='SavLanguage=ENU;SavCodePage=65001;LabelFormatSingle=%Label;LabelFormatMultiple=%Label;LabelFormatDichotomy=%Label - %CategoryLabel';CategorySet=2"
+    MetadataOutputName = MDD_FILE
+End OutputDatasource
+
+' -----------------------------------------------------------------------
+
+Event(OnBeforeJobStart)
+	Debug.Echo("Beginning execution of " +SCRIPT_NAME + " at " + CText(now()))
+	Debug.Log("Beginning execution of " +SCRIPT_NAME)
+
+	Dim fso, directoryname, mainfolder, filecollection, file
+	Set fso = CreateObject("Scripting.FileSystemObject")
+
+	' The outputs should be deleted to make sure that we don't append
+	' to an existing file
+
+	If (fso.FileExists(SAV_FULL_PATH)) Then
+		fso.DeleteFile(SAV_FULL_PATH)
+	End If
+
+	If (fso.FileExists(MDD_FILE)) Then
+		fso.DeleteFile(MDD_FILE)
+	End If
+
+	' Remove log files
+	directoryname=".\Logs"
+	Set mainfolder = fso.GetFolder(directoryname)
+	Set filecollection = mainfolder.Files
+	On Error Resume Next
+	For Each file In filecollection
+		If UCase(Left(file.Name)) = "DMS" Then
+			file.Delete()
+		End If
+	Next
+End Event
+
+Event(OnAfterJobEnd)
+	Debug.Echo("Ending execution of " +SCRIPT_NAME + " at " + CText(Now()))
+	Debug.Log("Ending execution of " +SCRIPT_NAME)
+End Event
