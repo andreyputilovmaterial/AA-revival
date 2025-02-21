@@ -24,6 +24,10 @@ Once the map is updated, run `run_aarevival_apply_write_mrs.bat`. A mrs script `
 
 Run `run_aarevival_build_spss.bat`.
 
+## How to verify that the new SPSS is close to the previous created with AA? ##
+Use this tool: 
+[Diff](https://github.com/andreyputilovmaterial/MDM-Diff-py/)
+
 ## Key featres ##
 It follows basically the same usage pattern as older AA.
 
