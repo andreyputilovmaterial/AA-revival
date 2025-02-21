@@ -80,8 +80,8 @@ def read_shortname(mdmvar):
     # assert validate_shortname(shortname), 'ShortName does not seem to be valid, please check'
     if not validate_shortname(shortname):
         # a place for breakpoint
-        raise AssertionError('ShortName does not seem to be valid, please check')
-        # pass
+        # raise AssertionError('ShortName does not seem to be valid, please check: "{shortname}"'.format(shortname=shortname))
+        pass
     return shortname
 
 
@@ -98,8 +98,6 @@ def read_shortname_aastyle_logic_based_on_properties(mdmvar):
         else:
             count_sisters = 0
             mdmparent = util_mdmvars.get_parent(mdmvar)
-            if not mdmparent:
-                print('look at this') # TODO: debug
             is_numeric_grid = None
             is_text_grid = None # I am treating None and False differently here, which is not best design probably
             is_categorical_grid = None # I am treating None and False differently here, which is not best design probably

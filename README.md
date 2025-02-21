@@ -49,8 +49,10 @@ Also, the scripts do not have any validation. All validation is in Excel and it'
 
 All these scripts can be added to your workflow programmatically. It no longer requires pressing any button in Excel manually, all steps can be called programmatically.
 
+Scripts do not have to be in one folder. That .py bundle should probably be moved somewhere to ./Includes, or to some other subfolder.
+
 ## Runtimes ##
-Runtimes are super fast. Validation takes 1 second. 601_SavPrep.mrs takes couple minutes to run. Then, 602_SavCreate.dms takes ~40-90 minutes to produce a 5 GB SPSS.
+Runtimes are super fast. Validation takes 1 second. Map reload takes up to \~10 minutes. 601_SavPrep.mrs takes couple minutes to run. Then, 602_SavCreate.dms takes \~40-90 minutes to produce a 5 GB SPSS.
 
 ## Why this was created ##
 As I see, in trackers with big size of data, Flatout can't handle generating SPSS and can't allocate enough memory and process the file.
