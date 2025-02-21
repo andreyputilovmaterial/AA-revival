@@ -44,7 +44,7 @@ def helper_parse_shortname_formula(txt):
         return '"&VLOOKUP("{var}.Categories[{cat}]",\'{sheet_name}\'!$A2:${col_last}999999,{vlookup_index},FALSE)&"'.format(var=matches[1],cat=matches[2],sheet_name=columns_sheet_mdddata_categories.sheet_name,col_last=columns_sheet_mdddata_categories.column_letters['col_analysisvalue'],vlookup_index=columns_sheet_mdddata_categories.column_vlookup_index['col_analysisvalue'])
     def repl_var_shortname(matches):
         return '"&VLOOKUP("{var}",\'{sheet_name}\'!$A2:${col_last}999999,{vlookup_index},FALSE)&"'.format(var=matches[1],sheet_name=sheet.sheet_name,col_last=sheet.column_letters['col_shortname'],vlookup_index=sheet.column_vlookup_index['col_shortname'])
-    if '[L' in txt:
+    if '[L:' in txt:
         assert '"' not in txt, '\'"\' in shortname, please check'
         return '="{f}"'.format(f=re.sub(r'\[L:(.*?)\]',repl_var_shortname,re.sub(r'\[L:(.*?):(.*?)\]',repl_cat_analysisvalue,txt,flags=re.I|re.DOTALL),flags=re.I|re.DOTALL))
     else:

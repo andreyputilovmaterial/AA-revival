@@ -61,11 +61,13 @@ def sanitize_analysis_value(value):
 
 
 def validate_shortname(name):
-    return not not re.match(r'^\s*?(?:\w+|(?:\[L:[^\]:]*:[^:\]]*\]))+\s*?$',name,flags=re.I|re.DOTALL) and not re.match(r'^\s*?\d.*?$',name,flags=re.I|re.DOTALL)
+    name = re.sub(r'\[L:[^\]]*?\]','',name,flags=re.I|re.DOTALL)
+    return not not re.match(r'^\s*?(?:[a-z0-9#@$\.]*)\s*?$',name,flags=re.I|re.DOTALL)
 
 
 
 def read_shortname(mdmvar):
+    # print(mdmvar.FullName)
     shortname = None
     try:
         shortname = read_shortname_aastyle_logic_based_on_properties(mdmvar)
