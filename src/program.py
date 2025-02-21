@@ -8,6 +8,9 @@ import pandas as pd
 
 
 
+import codecs
+
+
 
 if __name__ == '__main__':
     # run as a program
@@ -67,7 +70,7 @@ def cli_program_produce_savprep_mrs():
         type=str,
         required=False
     )
-    parser.add_argument( '--write-template', help='Do we need to create a 601_SavPrepRevival.mrs?', type=str, required=False, )
+    # parser.add_argument( '--write-template', help='Do we need to create a 601_SavPrepRevival.mrs?', type=str, required=False, )
     args, _ = parser.parse_known_args()
     
     variables = None
@@ -93,9 +96,9 @@ def cli_program_produce_savprep_mrs():
         raise FileNotFoundError('Map: file not provided; please use --map option')
 
     config = {}
-    config['need_write_template'] = False
-    if args.write_template:
-        config['need_write_template'] = True
+    # config['need_write_template'] = False
+    # if args.write_template:
+    #     config['need_write_template'] = True
     config['datetime'] = time_start
 
     out_filename = None
@@ -113,20 +116,24 @@ def cli_program_produce_savprep_mrs():
     config['out_filename_include_addin_filenamepart'] = '{s}'.format(s=Path(out_filename_include_addin).name)
 
     
-    if config['need_write_template']:
+    # if config['need_write_template']:
         
-        print('{script_name}: working, generating mrs script, template'.format(script_name=script_name))
-        result_template = write_mrs.generate_savprep_mrs_template(config)
+    #     print('{script_name}: working, generating mrs script, template'.format(script_name=script_name))
+    #     result_template = write_mrs.generate_savprep_mrs_template(config)
 
-        print('{script_name}: saving as "{fname}"'.format(fname=out_filename_template,script_name=script_name))
-        with open(out_filename_template, "w",encoding='utf-8') as outfile:
-            outfile.write(result_template)
+    #     print('{script_name}: saving as "{fname}"'.format(fname=out_filename_template,script_name=script_name))
+    #     with open(out_filename_template, "wb") as outfile:
+    #         outfile.write(codecs.BOM_UTF8)
+    #     with open(out_filename_template, "a",encoding='utf-8') as outfile:
+    #         outfile.write(result_template)
 
     print('{script_name}: working, generating mrs script, include addin'.format(script_name=script_name))
     result_include_addin = write_mrs.generate_savprep_mrs_include_addin(variables,map_df,config)
 
     print('{script_name}: saving as "{fname}"'.format(fname=out_filename_include_addin,script_name=script_name))
-    with open(out_filename_include_addin, "w",encoding='utf-8') as outfile:
+    with open(out_filename_include_addin, "wb") as outfile:
+        outfile.write(codecs.BOM_UTF8)
+    with open(out_filename_include_addin, "a",encoding='utf-8') as outfile:
         outfile.write(result_include_addin)
 
     time_finish = datetime.now()
@@ -205,6 +212,7 @@ def cli_program_update_map():
         if not map_filename:
             raise FileNotFoundError('MDD not map file are provided. You have to pass MDD file name and/or map file name. If MDD file name is not provided, it can be read from the map. If map file is not provided, it will be created with a default name. But you have to set of of those, --mdd or --map, or both.')
         print('{script_name}: MDD name not provided, reading MDD path from the map'.format(script_name=script_name))
+        # TODO: Map.read_MDD_Path_from_Excel
         with pd.ExcelFile(map_filename,engine='openpyxl') as xls:
             df = xls.parse(sheet_name='Overview', header=0, index_col=0, keep_default_na=False).fillna('')
             try:

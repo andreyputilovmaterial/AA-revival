@@ -2,9 +2,8 @@ import re
 import pandas as pd
 
 
-from . import template
-from . import util_mdmvars
 
+from . import util_mdmvars
 
 
 
@@ -195,11 +194,6 @@ def make_path_to_field(variable):
         return 'mDocument' + '.Fields["{name}"]'.format(name=variable.Name)
 
 
-
-def generate_savprep_mrs_template(config):
-    result = template.TEMPLATE
-    result = result.replace('{{{addin_file_path}}}',config['out_filename_include_addin_filenamepart'])
-    return result
 
 
 

@@ -163,6 +163,8 @@ def compile_question_type_description(mdmvar):
                 return 'boolean flag'
             elif mdmvar.DataType==16:
                 return 'ivariables instance'
+            elif mdmvar.DataType==27:
+                return 'mdm document'
             else:
                 raise Exception('unrecognized DataType: {o}'.format(o=mdmvar.DataType))
         raise Exception('unrecognized ObjectTypeValue: {o}'.format(o=mdmvar.ObjectTypeValue))

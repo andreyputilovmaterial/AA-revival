@@ -30,7 +30,8 @@ COPY ..\run_applymap.bat .\run_aarevival_apply_write_mrs.bat
 powershell -Command "(gc 'run_aarevival_reload_map.bat' -encoding 'Default') -replace '(dist[/\\])?mdmtools_aarevival.py', 'mdmtools_aarevival.py' | Out-File -encoding 'Default' 'run_aarevival_reload_map.bat'"
 powershell -Command "(gc 'run_aarevival_apply_write_mrs.bat' -encoding 'Default') -replace '(dist[/\\])?mdmtools_aarevival.py', 'mdmtools_aarevival.py' | Out-File -encoding 'Default' 'run_aarevival_apply_write_mrs.bat'"
 COPY ..\run_build_spss.bat .\run_aarevival_build_spss.bat
-COPY ..\601_SavPrepRevival.mrs .\601_SavPrepRevival.mrs
+@REM COPY ..\601_SavPrepRevival.mrs .\601_SavPrepRevival.mrs
+python ..\build_copy_with_utf8_bom.py  ..\SavPrepTemplate.mrs .\601_SavPrepRevival.mrs
 POPD
 
 

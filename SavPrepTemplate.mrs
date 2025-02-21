@@ -1,3 +1,6 @@
+﻿' This file must be saved with utf-8 with BOM
+
+
 
 ' -----------------------------------------------------------------------
 ' IPS Table Shell
@@ -69,6 +72,10 @@ End If
 Set mDocument = CreateObject("MDM.Document")
 mDocument.Open(S_MDD_SOURCE, "", "&H0003")
 
+Dim oField, oCategory
+
+
+
 'If locked, we'll need to add a new version in order to be able to create a new data source `
 If mDocument.Versions.Latest.IsLocked Then
 	mDocument.Versions.AddNew()
@@ -89,8 +96,9 @@ mDocument.DataSources.AddNew("mrSavDsc", "mrSavDsc", DATA_FILE)
 '--------------------------------------------------------------------------------------------------------------------------------------------
 'Setup the configuration properties of the generator
 
+
+
 Dim MyConfiguration, MyGenerator
-Dim oField, oCategory
 
 For Each DataSource In mDocument.DataSources
 	If LCase(DataSource.CDSCName) = LCase("mrSavDsc") Then
@@ -99,10 +107,14 @@ For Each DataSource In mDocument.DataSources
 		Set MyGenerator = mDocument.AliasMap.Generator
 		Set MyConfiguration = MyGenerator.Configuration
 		MyConfiguration.MaxLength = 50
-
+		
+		
+		
 		' ProcessVariable(mDocument)
 #include "601_SavPrepRevival.INCLUDE.mrs"
-
+		
+		
+		
 		Set MyGenerator = Null
 		Set MyConfiguration = Null
 	End If
@@ -145,8 +157,22 @@ Sub SetAlias(oField,Shortname)
             End If
         End If
         If Not ShouldSkip Then
-        	sBaseAliasPart = Shortname
-        	sOwnIterativeAliasPart = "" ' TODO:
+        	'sBaseAliasPart = Shortname
+        	'sOwnIterativeAliasPart = "" ' TODO:
+			dim re, re_Matches
+			set re = CreateObject("VBScript.RegExp")
+			re.Pattern = "^(.*?)((?:_[0-9]{3})*)$"
+			re.IgnoreCase = True
+			re.Global = True
+			
+		    set re_Matches = re.Execute(Shortname)
+		    if re_Matches.Count>0 then
+			    sBaseAliasPart  = ctext(re_Matches[0].submatches.item[0])
+			    sOwnIterativeAliasPart   = ctext(re_Matches[0].submatches.item[1])
+			else
+				sBaseAliasPart = Shortname
+				sOwnIterativeAliasPart = ""
+			end if
         	sCategoricalIterativeAliasPart = "" ' TODO:
             sAlias = sBaseAliasPart + sCategoricalIterativeAliasPart + sLoopIterativeAliasPart + sOwnIterativeAliasPart
             oVariableInstance.AliasName = sAlias
