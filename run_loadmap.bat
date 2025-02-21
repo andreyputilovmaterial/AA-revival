@@ -42,7 +42,8 @@ SET "MAP_FILE=.\AnalysisAuthorRevival.xlsx"
 
 ECHO -
 ECHO 1. read MDD and update the map
-python dist/mdmtools_aarevival.py --program update_map --mdd "%MDD_FILE%" --map "%MAP_FILE%" --config-fill-analysisvalues "%CONFIG_FILL_ANALYSISVALUES%"
+@REM python dist/mdmtools_aarevival.py --program update_map --mdd "%MDD_FILE%" --map "%MAP_FILE%" --config-fill-analysisvalues "%CONFIG_FILL_ANALYSISVALUES%"
+python dist/mdmtools_aarevival.py --program update_map --mdd "%MDD_FILE%" --map "%MAP_FILE%"
 if %ERRORLEVEL% NEQ 0 ( echo ERROR: Failure && pause && goto CLEANUP && exit /b %errorlevel% )
 
 @REM pause
