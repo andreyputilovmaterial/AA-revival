@@ -25,8 +25,14 @@ Once the map is updated, run `run_aarevival_apply_write_mrs.bat`. A mrs script `
 Run `run_aarevival_build_spss.bat`.
 
 ## How to verify that the new SPSS is close to the previous created with AA? ##
-Use this tool: 
-[Diff](https://github.com/andreyputilovmaterial/MDM-Diff-py/)
+I recommend my MDM-Diff-py, it's easy to look through variables visually: 
+
+Download mdmtoolsap_bundle.py and run_diff_spss.bat from 
+[MDM-Diff-py / Releases / Latest](https://github.com/andreyputilovmaterial/MDM-Diff-py/releases/latest)
+
+Edit run_diff_spss.bat and insert paths to your old and new SPSS.
+
+Or, you can compare old and new SPSS file with Qualizodo (if files are big that won't work for you)
 
 ## Key featres ##
 It follows basically the same usage pattern as older AA.
