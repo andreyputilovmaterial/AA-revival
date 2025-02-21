@@ -33,7 +33,13 @@ else:
 
 
 
-def parse_shortname_formula(txt):
+
+CONFIG_VALIDATION_MAX_SHORTNAME_LENGTH = 50
+
+
+
+
+def helper_parse_shortname_formula(txt):
     def repl_cat_analysisvalue(matches):
         return '"&VLOOKUP("{var}.Categories[{cat}]",\'{sheet_name}\'!$A2:${col_last}999999,{vlookup_index},FALSE)&"'.format(var=matches[1],cat=matches[2],sheet_name=columns_sheet_mdddata_categories.sheet_name,col_last=columns_sheet_mdddata_categories.column_letters['col_analysisvalue'],vlookup_index=columns_sheet_mdddata_categories.column_vlookup_index['col_analysisvalue'])
     def repl_var_shortname(matches):
@@ -91,9 +97,9 @@ def build_df(mdmvariables,df_prev,config):
         question_label_lookup = 'VLOOKUP($A{row},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_label_vlookup_index},FALSE)&""'.format(**substitutes)
         question_label = '=IF(ISERROR({val}),${col_label_mdd}{row}&"",{val})'.format(**substitutes,val=question_label_lookup)
 
-        question_shortname_mdd = parse_shortname_formula(aa_logic.read_shortname(mdmvariable))
+        question_shortname_mdd = helper_parse_shortname_formula(aa_logic.read_shortname(mdmvariable))
 
-        question_shortname_prev = parse_shortname_formula( df_prev.loc[question_name,sheet.column_names['col_shortname']] if df_prev is not None and question_name in df_prev.index.get_level_values(0) else '' )
+        question_shortname_prev = helper_parse_shortname_formula( df_prev.loc[question_name,sheet.column_names['col_shortname']] if df_prev is not None and question_name in df_prev.index.get_level_values(0) else '' )
 
         question_shortname = '=' + '&", "&'.join([
             'VLOOKUP({item_name},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_shortname_vlookup_index},FALSE)&""'.format(**substitutes,item_name='$A{row}'.format(**substitutes) if item_name==question_name else item_name) for item_name in question_data_items_within_parent_wing
@@ -146,7 +152,7 @@ def build_df(mdmvariables,df_prev,config):
             question_helper_validation_isalphanumeric = question_helper_validation_isalphanumeric.replace('<<VAR>>','SUBSTITUTE(<<VAR>>,"{letter}","")'.format(letter=letter))
         question_helper_validation_isalphanumeric = question_helper_validation_isalphanumeric.replace('<<VAR>>','${col_helper_shortname_clean_lcase}{row}'.format(**substitutes))
         question_helper_validation_notstartswithnumber = ('=NOT(OR(RIGHT(${col_helper_shortname_clean_lcase}{row},1)=".",'+','.join([ 'LEFT(${col_helper_shortname_clean_lcase}{row},1)="{letter}"'.format(**substitutes,letter=letter) for letter in ['0','1','2','3','4','5','6','7','8','9','$','#','@','.'] ])+'))').format(**substitutes)
-        question_helper_validation_lengthcheck = '=LEN(${col_helper_shortname_clean_lcase}{row})<=32'.format(**substitutes)
+        question_helper_validation_lengthcheck = '=LEN(${col_helper_shortname_clean_lcase}{row})<={MAXLENGTH}'.format(**substitutes,MAXLENGTH=CONFIG_VALIDATION_MAX_SHORTNAME_LENGTH)
         question_helper_validation_reservedkeywordcheck = ('=NOT(OR('+','.join(['${col_helper_shortname_clean_lcase}{row}="{word}"'.format(**substitutes,word=word) for word in ['ALL','AND','BY','EQ','GE','GT','LE','LT','NE','NOT','OR','TO','WITH',] ])+'))').format(**substitutes)
         question_helper_validation_isunique = '=(MATCH($A{row},$A$2:$A$999999,0)=MATCH(${col_helper_shortname_clean_lcase}{row},${col_helper_shortname_clean_lcase}$2:${col_helper_shortname_clean_lcase}$999999,0))'.format(**substitutes)
 
