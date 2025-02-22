@@ -5,24 +5,10 @@ from openpyxl.utils import get_column_letter
 
 
 
-if __name__ == '__main__':
-    # run as a program
-    import excel_format_sheet_overview
-    import excel_format_sheet_variables
-    import excel_format_sheet_analysisvalues
-    import excel_format_sheet_validation
-elif '.' in __name__:
-    # package
-    from . import excel_format_sheet_overview
-    from . import excel_format_sheet_variables
-    from . import excel_format_sheet_analysisvalues
-    from . import excel_format_sheet_validation
-else:
-    # included with no parent package
-    import excel_format_sheet_overview
-    import excel_format_sheet_variables
-    import excel_format_sheet_analysisvalues
-    import excel_format_sheet_validation
+from . import excel_format_sheet_overview
+from . import excel_format_sheet_variables
+from . import excel_format_sheet_analysisvalues
+from . import excel_format_sheet_validation
 
 
 

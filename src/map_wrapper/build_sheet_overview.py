@@ -19,24 +19,11 @@ except:
 
 
 
-if __name__ == '__main__':
-    # run as a program
-    import util_dataframe_wrapper
-    import columns_sheet_overview
-    import columns_sheet_mdddata_variables
-    import columns_sheet_mdddata_categories
-elif '.' in __name__:
-    # package
-    from . import util_dataframe_wrapper
-    from . import columns_sheet_overview
-    from . import columns_sheet_mdddata_variables
-    from . import columns_sheet_mdddata_categories
-else:
-    # included with no parent package
-    import util_dataframe_wrapper
-    import columns_sheet_overview
-    import columns_sheet_mdddata_variables
-    import columns_sheet_mdddata_categories
+
+from . import util_dataframe_wrapper
+from .column_definitions import sheet_overview
+from .column_definitions import sheet_mdddata_variables
+from .column_definitions import sheet_mdddata_categories
 
 
 
@@ -49,14 +36,14 @@ CONFIG_TOOL_NAME = 'IPS Tools - Author Specifications Revival v0.000'
 
 
 
-def build_df(variables,df_prev,config):
+def build_df(mdd,config):
 
     # if df:
     #     df.drop(df.index,inplace=True)
 
-    df = util_dataframe_wrapper.PandasDataframeWrapper(columns_sheet_overview.columns).to_df()
+    df = util_dataframe_wrapper.PandasDataframeWrapper(sheet_overview.columns).to_df()
 
-    mdmdoc = variables[0]
+    mdmdoc = mdd.mdmDocument
 
     mdd_filename_part = Path(config['mdd_filename']).stem
     mdd_reload_datetime = config['datetime']
@@ -99,12 +86,12 @@ def build_df(variables,df_prev,config):
     df.loc['Validation'] = [
         '=IF(AND(AND({range_validation_variables}),AND({range_validation_categories})),"No issues","Failed")'.format(
             range_validation_variables = '\'{sheet_name}\'!${col}$2:${col}$999999'.format(
-                sheet_name = columns_sheet_mdddata_variables.sheet_name,
-                col = columns_sheet_mdddata_variables.column_letters['col_validation'],
+                sheet_name = sheet_mdddata_variables.sheet_name,
+                col = sheet_mdddata_variables.column_letters['col_validation'],
             ),
             range_validation_categories = '\'{sheet_name}\'!${col}$2:${col}$999999'.format(
-                sheet_name = columns_sheet_mdddata_categories.sheet_name,
-                col = columns_sheet_mdddata_categories.column_letters['col_validation'],
+                sheet_name = sheet_mdddata_categories.sheet_name,
+                col = sheet_mdddata_categories.column_letters['col_validation'],
             ),
         ), 
     ]

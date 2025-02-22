@@ -1,37 +1,17 @@
 
 
-if __name__ == '__main__':
-    # run as a program
-    import aa_logic
-    import util_performance_monitor as util_perf
-    import util_mdmvars
-    import util_dataframe_wrapper
-    import columns_sheet_mdddata_categories as sheet
-    import columns_sheet_analysisvalues
-    import columns_sheet_mdddata_variables
-elif '.' in __name__:
-    # package
-    from . import aa_logic
-    from . import util_performance_monitor as util_perf
-    from . import util_mdmvars
-    from . import util_dataframe_wrapper
-    from . import columns_sheet_mdddata_categories as sheet
-    from . import columns_sheet_analysisvalues
-    from . import columns_sheet_mdddata_variables
-else:
-    # included with no parent package
-    import aa_logic
-    import util_performance_monitor as util_perf
-    import util_mdmvars
-    import util_dataframe_wrapper
-    import columns_sheet_mdddata_categories as sheet
-    import columns_sheet_analysisvalues
-    import columns_sheet_mdddata_variables
+from . import aa_logic
+from . import util_performance_monitor as util_perf
+from . import util_dataframe_wrapper
+from .column_definitions import sheet_mdddata_categories as sheet
+from .column_definitions import sheet_analysisvalues
+from .column_definitions import sheet_mdddata_variables
 
 
 
 # from openpyxl.worksheet.formula import ArrayFormula
-def build_df(mdmvariables,df_prev,config):
+def build_df(mdd,prev_map,config):
+    mdmvariables = mdd.variables
     data = util_dataframe_wrapper.PandasDataframeWrapper(sheet.columns)
 
     performance_counter = iter(util_perf.PerformanceMonitor(config={
@@ -47,25 +27,25 @@ def build_df(mdmvariables,df_prev,config):
         category_question_name = mdmvariable.FullName
 
         next(performance_counter)
-        if util_mdmvars.is_iterative(mdmvariable) or util_mdmvars.has_own_categories(mdmvariable):
-            for mdmsharedlist_name, mdmcategory in util_mdmvars.list_mdmcategories_with_slname(mdmvariable):
+        if mdd.is_iterative(mdmvariable) or mdd.has_own_categories(mdmvariable):
+            for mdmsharedlist_name, mdmcategory in mdd.list_mdmcategories_with_slname(mdmvariable):
 
                 substitutes = {
                     **sheet.column_letters,
                     'row': data.get_working_row_number(),
-                    'sheet_name_analysisvalues': columns_sheet_analysisvalues.sheet_name,
+                    'sheet_name_analysisvalues': sheet_analysisvalues.sheet_name,
                     'sheet_analysisvalues_values_range': '${col_data_start}$2:$ZZ$999999'.format(col_data_start='C'),
                     'sheet_analysisvalues_allsheet_range': '${col_data_start}$2:$ZZ$999999'.format(col_data_start='A'),
                     'sheet_analysisvalues_index_column_range': '${col_data_index}$2:${col_data_index}$999999'.format(col_data_index='A'),
-                    'sheet_name_mdddata_variables': columns_sheet_mdddata_variables.sheet_name,
-                    'col_mdddata_variables_include': columns_sheet_mdddata_variables.column_letters['col_include'],
-                    'col_mdddata_variables_include_vlookup_index': columns_sheet_mdddata_variables.column_vlookup_index['col_include'],
+                    'sheet_name_mdddata_variables': sheet_mdddata_variables.sheet_name,
+                    'col_mdddata_variables_include': sheet_mdddata_variables.column_letters['col_include'],
+                    'col_mdddata_variables_include_vlookup_index': sheet_mdddata_variables.column_vlookup_index['col_include'],
                     # 'col_mdddata_question_type': '',
-                    # # 'col_mdddata_col_last': columns_sheet_analysisvalues.column_letters['col_validation'],
-                    # 'col_mdddata_question_type': columns_sheet_analysisvalues.column_letters['col_question_type'],
-                    # 'col_mdddata_question_type_vlookup_index': columns_sheet_analysisvalues.column_vlookup_index['col_question_type'],
-                    # 'col_mdddata_validation': columns_sheet_analysisvalues.column_letters['col_validation'],
-                    # 'col_mdddata_validation_vlookup_index': columns_sheet_analysisvalues.column_vlookup_index['col_validation'],
+                    # # 'col_mdddata_col_last': sheet_analysisvalues.column_letters['col_validation'],
+                    # 'col_mdddata_question_type': sheet_analysisvalues.column_letters['col_question_type'],
+                    # 'col_mdddata_question_type_vlookup_index': sheet_analysisvalues.column_vlookup_index['col_question_type'],
+                    # 'col_mdddata_validation': sheet_analysisvalues.column_letters['col_validation'],
+                    # 'col_mdddata_validation_vlookup_index': sheet_analysisvalues.column_vlookup_index['col_validation'],
                 }
                 
                 category_name = mdmcategory.Name
@@ -81,13 +61,13 @@ def build_df(mdmvariables,df_prev,config):
                 category_analysisvalue_lookup_row_index = '_xlfn.MATCH( ${col_category}{row}, {category_analysisvalue_lookup_categorynames_array}, 0 )'.format(**substitutes,category_analysisvalue_lookup_categorynames_array=category_analysisvalue_lookup_categorynames_array)
 
                 category_label_mdd = mdmcategory.Label
-                category_label_prev = df_prev.loc[category_path,sheet.column_names['col_label']] if df_prev is not None and category_path in df_prev.index.get_level_values(0) else ''
+                category_label_prev = prev_map.read_category_label(category_question_name,category_name)
                 category_label_lookup = '_xlfn.INDEX({where_looking_at}, {index_looking_for} )'.format(where_looking_at=category_analysisvalue_lookup_labels_array,index_looking_for=category_analysisvalue_lookup_row_index)
                 category_label = '=IF({val}&""="","",{val}&"")'.format(val=category_label_lookup)
                 # category_label = ArrayFormula(text=category_label,ref='')
 
                 category_analysisvalue_mdd = aa_logic.sanitize_analysis_value(mdmcategory.Properties['Value'])
-                category_analysisvalue_prev = df_prev.loc[category_path,sheet.column_names['col_analysisvalue']] if df_prev is not None and category_path in df_prev.index.get_level_values(0) else ''
+                category_analysisvalue_prev = prev_map.read_category_analysisvalue(category_question_name,category_name)
                 category_analysisvalue_lookup = '_xlfn.INDEX({where_looking_at}, {index_looking_for} )'.format(where_looking_at=category_analysisvalue_lookup_analysisvalues_array,index_looking_for=category_analysisvalue_lookup_row_index)
                 category_analysisvalue = '=IF({val}&""="","",{val}&"")'.format(val=category_analysisvalue_lookup)
                 # category_analysisvalue = ArrayFormula(text=category_analysisvalue,ref='')

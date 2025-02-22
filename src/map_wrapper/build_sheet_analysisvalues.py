@@ -4,31 +4,11 @@ from openpyxl.utils import get_column_letter
 
 
 
-if __name__ == '__main__':
-    # run as a program
-    # import util_dataframe_wrapper
-    import util_performance_monitor as util_perf
-    import util_mdmvars
-    import columns_sheet_mdddata_categories
-    import columns_sheet_analysisvalues as sheet
-    import columns_sheet_mdddata_variables
-elif '.' in __name__:
-    # package
-    # from . import util_dataframe_wrapper
-    from . import util_performance_monitor as util_perf
-    from . import util_mdmvars
-    from . import columns_sheet_mdddata_categories
-    from . import columns_sheet_analysisvalues as sheet
-    from . import columns_sheet_mdddata_variables
-else:
-    # included with no parent package
-    # import util_dataframe_wrapper
-    import util_performance_monitor as util_perf
-    import util_mdmvars
-    import columns_sheet_mdddata_categories
-    import columns_sheet_analysisvalues as sheet
-    import columns_sheet_mdddata_variables
-
+# from . import util_dataframe_wrapper
+from . import util_performance_monitor as util_perf
+from .column_definitions import sheet_mdddata_categories
+from .column_definitions import sheet_analysisvalues as sheet
+from .column_definitions import sheet_mdddata_variables
 
 
 def has_value_numeric(arg):
@@ -59,8 +39,9 @@ def has_value_text(arg):
 
 
 
-def build_df(mdmvariables,df_prev,config):
+def build_df(mdd,prev_map,config):
     # data = util_dataframe_wrapper.PandasDataframeWrapper(sheet.columns)
+    mdmvariables = mdd.variables
     data_add = []
     row = 2
 
@@ -76,23 +57,23 @@ def build_df(mdmvariables,df_prev,config):
             continue
         category_question_name = mdmvariable.FullName
         next(performance_counter)
-        if util_mdmvars.is_iterative(mdmvariable) or util_mdmvars.has_own_categories(mdmvariable):
+        if mdd.is_iterative(mdmvariable) or mdd.has_own_categories(mdmvariable):
 
 
             substitutes = {
                 **sheet.column_letters,
                 # 'row': data.get_working_row_number(),
                 'row': row,
-                'sheet_name_mdddata_categories': columns_sheet_mdddata_categories.sheet_name,
-                'sheet_name_mdddata_variables': columns_sheet_mdddata_variables.sheet_name,
-                'col_mddvars_question': columns_sheet_mdddata_variables.column_letters['col_question'],
-                'col_mddvars_shortname': columns_sheet_mdddata_variables.column_letters['col_shortname'],
-                'col_mddvars_shortname_vlookup_index': columns_sheet_mdddata_variables.column_vlookup_index['col_shortname'],
-                'col_mddvars_include': columns_sheet_mdddata_variables.column_letters['col_include'],
-                'col_mddvars_include_vlookup_index': columns_sheet_mdddata_variables.column_vlookup_index['col_include'],
-                'col_mddcats_path': columns_sheet_mdddata_categories.column_letters['col_path'],
-                'col_mddcats_validation': columns_sheet_mdddata_categories.column_letters['col_validation'],
-                'col_mddcats_validation_vlookup_index': columns_sheet_mdddata_categories.column_vlookup_index['col_validation'],
+                'sheet_name_mdddata_categories': sheet_mdddata_categories.sheet_name,
+                'sheet_name_mdddata_variables': sheet_mdddata_variables.sheet_name,
+                'col_mddvars_question': sheet_mdddata_variables.column_letters['col_question'],
+                'col_mddvars_shortname': sheet_mdddata_variables.column_letters['col_shortname'],
+                'col_mddvars_shortname_vlookup_index': sheet_mdddata_variables.column_vlookup_index['col_shortname'],
+                'col_mddvars_include': sheet_mdddata_variables.column_letters['col_include'],
+                'col_mddvars_include_vlookup_index': sheet_mdddata_variables.column_vlookup_index['col_include'],
+                'col_mddcats_path': sheet_mdddata_categories.column_letters['col_path'],
+                'col_mddcats_validation': sheet_mdddata_categories.column_letters['col_validation'],
+                'col_mddcats_validation_vlookup_index': sheet_mdddata_categories.column_vlookup_index['col_validation'],
             }
 
             categories_data = []
@@ -100,7 +81,7 @@ def build_df(mdmvariables,df_prev,config):
             category_question_include_truefalse = 'VLOOKUP(${col_question}{row},\'{sheet_name_mdddata_variables}\'!${col_mddvars_question}$2:${col_mddvars_include}$999999,{col_mddvars_include_vlookup_index},FALSE)'.format(**substitutes)
             category_question_in_exclusions   = '=IF({val},"","(exclude)")'.format(val=category_question_include_truefalse)
 
-            for col_index_zerobased, mdmcategory in enumerate(util_mdmvars.list_mdmcategories(mdmvariable)):
+            for col_index_zerobased, mdmcategory in enumerate(mdd.list_mdmcategories(mdmvariable)):
 
                 col_index = 3 + col_index_zerobased
                 col_letter = get_column_letter(col_index)
@@ -113,25 +94,11 @@ def build_df(mdmvariables,df_prev,config):
 
                 substitutes['category_path_as_formula'] = category_path_as_formula
 
-                category_label = \
-                    ( \
-                        df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_label_prev']] \
-                        if has_value_text(df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_label_prev']]) \
-                        else df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_label_mdd']] \
-                    ) \
-                    if df_prev is not None and category_path in df_prev.index.get_level_values(0) \
-                    else ''
+                category_label = prev_map.read_category_label(category_question_name,category_name)
 
                 category_validation = '=VLOOKUP({category_path_as_formula},\'{sheet_name_mdddata_categories}\'!${col_mddcats_path}$2:${col_mddcats_validation}$999999,{col_mddcats_validation_vlookup_index},FALSE)'.format(**substitutes)
                 
-                category_analysisvalue = \
-                    ( \
-                        df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_analysisvalue_prev']] \
-                        if has_value_numeric(df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_analysisvalue_prev']]) \
-                        else df_prev.loc[category_path,columns_sheet_mdddata_categories.column_names['col_analysisvalue_mdd']] \
-                    ) \
-                    if df_prev is not None and category_path in df_prev.index.get_level_values(0) \
-                    else ''
+                category_analysisvalue = prev_map.read_category_analysisvalue(category_question_name,category_name)
 
                 categories_data.append({
                     'name': category_name,

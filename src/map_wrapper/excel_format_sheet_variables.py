@@ -6,15 +6,7 @@ from openpyxl.formatting.rule import FormulaRule
 
 
 
-if __name__ == '__main__':
-    # run as a program
-    import columns_sheet_variables
-elif '.' in __name__:
-    # package
-    from . import columns_sheet_variables
-else:
-    # included with no parent package
-    import columns_sheet_variables
+from .column_definitions import sheet_variables
 
 
 
@@ -23,7 +15,7 @@ def format_sheet_variables(sheet):
     fill_missing = PatternFill(start_color='eedd00',end_color='eedd00',fill_type='solid')
     color_shaded =  Font(color='444444')
     substitutes = {
-        **columns_sheet_variables.column_letters
+        **sheet_variables.column_letters
     }
     sheet.conditional_formatting.add('${col_shortname}$2:${col_shortname}$999999'.format(**substitutes),FormulaRule(formula=['=AND(NOT(ISBLANK(${col_question}2)),NOT(ISBLANK(${col_shortname}2)),NOT(ISBLANK(${col_include}2)),(${col_validation}2="Failed"))'.format(**substitutes)],fill=fill_failed))
     sheet.conditional_formatting.add('${col_shortname}$2:${col_shortname}$999999'.format(**substitutes),FormulaRule(formula=['=AND(NOT(ISBLANK(${col_question}2)),ISBLANK(${col_shortname}2),NOT(ISBLANK(${col_include}2)))'.format(**substitutes)],fill=fill_missing))

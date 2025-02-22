@@ -1,25 +1,20 @@
 
-
-
 import re
 
 
-from . import util_mdmvars
 
-
-
-def should_exclude(mdmitem):
+def should_exclude(mdmitem,MDD):
     def should_exclude_based_on_props(mdmitem):
         return  mdmitem.Properties['SavRemove'] or mdmitem.Properties['D_RemoveSav'] or mdmitem.Properties['D_Remove'] or mdmitem.Properties['RemoveSav']
     def should_exclude_recursively(mdmitem):
         if should_exclude_based_on_props(mdmitem):
             return True
-        mdmparent = util_mdmvars.get_parent(mdmitem) if util_mdmvars.has_parent(mdmitem) else None
+        mdmparent = MDD.get_parent(mdmitem) if MDD.has_parent(mdmitem) else None
         if mdmparent:
             if should_exclude_recursively(mdmparent):
                 return True
         return False
-    if util_mdmvars.is_nocasedata(mdmitem):
+    if MDD.is_nocasedata(mdmitem):
         return True
     return should_exclude_recursively(mdmitem)
 
@@ -66,19 +61,19 @@ def validate_shortname(name):
 
 
 
-def read_shortname(mdmvar):
+def read_shortname(mdmvar,MDD):
     # print(mdmvar.FullName)
     shortname = None
     try:
-        shortname = read_shortname_aastyle_logic_based_on_properties(mdmvar)
+        shortname = read_shortname_aastyle_logic_based_on_properties(mdmvar,MDD)
     except AAFailedFindShortnameException:
-        if util_mdmvars.has_parent(mdmvar) and util_mdmvars.is_helper_field(mdmvar):
+        if MDD.has_parent(mdmvar) and MDD.is_helper_field(mdmvar):
             try:
-                shortname = read_shortname_aastyle_otherspec(mdmvar)
+                shortname = read_shortname_aastyle_otherspec(mdmvar,MDD)
             except AAFailedFindShortnameException:
-                shortname = read_shortname_fallback(mdmvar)
+                shortname = read_shortname_fallback(mdmvar,MDD)
         else:
-            shortname = read_shortname_fallback(mdmvar)
+            shortname = read_shortname_fallback(mdmvar,MDD)
     # assert validate_shortname(shortname), 'ShortName does not seem to be valid, please check'
     if not validate_shortname(shortname):
         # a place for breakpoint
@@ -90,29 +85,29 @@ def read_shortname(mdmvar):
 
 class AAFailedFindShortnameException(Exception):
     """AAFailedFindShortnameException"""
-def read_shortname_aastyle_logic_based_on_properties(mdmvar):
+def read_shortname_aastyle_logic_based_on_properties(mdmvar,MDD):
     try:
-        if not util_mdmvars.has_parent(mdmvar):
+        if not MDD.has_parent(mdmvar):
             result = sanitize_shortname(mdmvar.Properties['ShortName'])
             if not result:
                 raise AAFailedFindShortnameException('Failed to find shortname: {s}'.format(s=mdmvar.Name))
             return result
         else:
             count_sisters = 0
-            mdmparent = util_mdmvars.get_parent(mdmvar)
+            mdmparent = MDD.get_parent(mdmvar)
             is_numeric_grid = None
             is_text_grid = None # I am treating None and False differently here, which is not best design probably
             is_categorical_grid = None # I am treating None and False differently here, which is not best design probably
-            is_helper_field = util_mdmvars.is_helper_field(mdmvar)
+            is_helper_field = MDD.is_helper_field(mdmvar)
             if not is_helper_field:
                 for f in mdmparent.Fields:
-                    if util_mdmvars.is_dataless(f):
+                    if MDD.is_dataless(f):
                         continue
                     elif f.Name==mdmvar.Name:
                         continue
                     count_sisters = count_sisters + 1
-            if util_mdmvars.is_iterative(mdmparent):
-                if util_mdmvars.is_data_item(mdmvar):
+            if MDD.is_iterative(mdmparent):
+                if MDD.is_data_item(mdmvar):
                     if mdmvar.DataType==3:
                         if count_sisters==0:
                             if mdmvar.MaxValue==1:
@@ -164,7 +159,7 @@ def read_shortname_aastyle_logic_based_on_properties(mdmvar):
                     raise AAFailedFindShortnameException('Failed to find shortname: {s}'.format(s=mdmvar.Name))
                 return result
     except AAFailedFindShortnameException as e:
-        if util_mdmvars.has_parent(mdmvar) and util_mdmvars.is_helper_field(mdmvar):
+        if MDD.has_parent(mdmvar) and MDD.is_helper_field(mdmvar):
             result_part1 = mdmparent.Properties["ShortName"]
             result_part2 = mdmvar.Properties["ShortName"]
             if not result_part1:
@@ -186,15 +181,15 @@ def read_shortname_aastyle_logic_based_on_properties(mdmvar):
 # we don't have our map passed to a function, so we can't grab the code [98] here
 # so I return [L:Ethnicity:AnotherRace]
 # and then, later, it is replaced with an Excel function
-def read_shortname_aastyle_otherspec(mdmvar):
+def read_shortname_aastyle_otherspec(mdmvar,MDD):
     def is_equal_name(name1,name2):
         return '{n}'.format(n=name1).lower()=='{n}'.format(n=name2).lower()
     mdmcat_matching_otherspec = None
-    mdmparent = util_mdmvars.get_parent(mdmvar) if util_mdmvars.has_parent(mdmvar) else None
-    if mdmparent and util_mdmvars.is_helper_field(mdmvar):
+    mdmparent = MDD.get_parent(mdmvar) if MDD.has_parent(mdmvar) else None
+    if mdmparent and MDD.is_helper_field(mdmvar):
         # trying to find that "Other" category that matches that given field
-        if util_mdmvars.is_categorical(mdmparent):
-            for mdmcat in util_mdmvars.list_mdmcategories(mdmparent):
+        if MDD.is_categorical(mdmparent):
+            for mdmcat in MDD.list_mdmcategories(mdmparent):
                 if mdmcat.Flag==80 and mdmcat.OtherReference and is_equal_name(mdmcat.Name,mdmvar.Name):
                     mdmcat_matching_otherspec = mdmcat
     if mdmcat_matching_otherspec:
@@ -206,7 +201,7 @@ def read_shortname_aastyle_otherspec(mdmvar):
         # but I am trying to repeat older logic from AA, we need category code here, I can't think of better solution right now
         # maybe I should introduce some syntax with inserts, like [L0], or [L0:category], something following similar standards to flatout pattern
         # not sure, maybe I'll do
-        shortname_parent_part = read_shortname_aastyle_logic_based_on_properties(mdmparent)
+        shortname_parent_part = read_shortname_aastyle_logic_based_on_properties(mdmparent,MDD)
         # return Parent+'_Other_[L0]'
         # result = '="'+shortname_parent_part + '_Other_' +'" & VLOOKUP("'+mdmcat.Name+'"\'MDD_Data_Categories\'!$A$2:$A$999999,6.FALSE)'
         result = shortname_parent_part + '_Other_' +'[L:{var}:{cat}]'.format(var=mdmparent.FullName,cat=mdmcat_matching_otherspec.Name)
@@ -216,7 +211,7 @@ def read_shortname_aastyle_otherspec(mdmvar):
 
 
 
-def read_shortname_fallback(mdmvar):
+def read_shortname_fallback(mdmvar,MDD):
     def check_if_improper_name(name):
         is_improper_name = False
         # and there are less common cases but still happening in disney bes
@@ -241,7 +236,7 @@ def read_shortname_fallback(mdmvar):
     
     sisters = []
     first_field = None
-    mdmparent = util_mdmvars.get_parent(mdmvar)
+    mdmparent = MDD.get_parent(mdmvar)
 
     is_impropert_field_own_name = False
     is_impropert_field_own_name = is_impropert_field_own_name or not field_prop_shortname
@@ -249,19 +244,19 @@ def read_shortname_fallback(mdmvar):
     already_used = [] # TODO: 
     is_impropert_field_own_name = is_impropert_field_own_name or already_used
 
-    if not util_mdmvars.has_parent(mdmvar):
+    if not MDD.has_parent(mdmvar):
         if is_impropert_field_own_name:
             return mdmvar.Name
         else:
             return field_prop_shortname
     else:
-        if util_mdmvars.is_helper_field(mdmvar):
-            return read_shortname(mdmparent) + '_' + ( field_prop_shortname if field_prop_shortname else mdmvar.Name )
+        if MDD.is_helper_field(mdmvar):
+            return read_shortname(mdmparent,MDD) + '_' + ( field_prop_shortname if field_prop_shortname else mdmvar.Name )
         else:
             for f in mdmparent.Fields:
                 if not first_field:
                     first_field = f
-                if util_mdmvars.is_dataless(f):
+                if MDD.is_dataless(f):
                     continue
                 elif f.Name==mdmvar.Name:
                     continue
@@ -269,11 +264,11 @@ def read_shortname_fallback(mdmvar):
         
             if is_impropert_field_own_name:
                 if len(sisters)==0:
-                    return read_shortname(mdmparent)
+                    return read_shortname(mdmparent,MDD)
                 elif check_if_improper_name(mdmvar.Name) and first_field and mdmvar.Name==first_field.Name:
-                    return read_shortname(mdmparent)
+                    return read_shortname(mdmparent,MDD)
                 else:
-                    return read_shortname(mdmparent) + '_' + ( field_prop_shortname if field_prop_shortname else mdmvar.Name )
+                    return read_shortname(mdmparent,MDD) + '_' + ( field_prop_shortname if field_prop_shortname else mdmvar.Name )
             else:
                 return field_prop_shortname
 

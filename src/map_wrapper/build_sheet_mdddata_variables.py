@@ -3,33 +3,12 @@ import re
 
 
 
-if __name__ == '__main__':
-    # run as a program
-    import aa_logic
-    import util_performance_monitor as util_perf
-    import util_mdmvars
-    import util_dataframe_wrapper
-    import columns_sheet_variables
-    import columns_sheet_mdddata_variables as sheet
-    import columns_sheet_mdddata_categories
-elif '.' in __name__:
-    # package
-    from . import aa_logic
-    from . import util_performance_monitor as util_perf
-    from . import util_mdmvars
-    from . import util_dataframe_wrapper
-    from . import columns_sheet_variables
-    from . import columns_sheet_mdddata_variables as sheet
-    from . import columns_sheet_mdddata_categories
-else:
-    # included with no parent package
-    import aa_logic
-    import util_performance_monitor as util_perf
-    import util_mdmvars
-    import util_dataframe_wrapper
-    import columns_sheet_variables
-    import columns_sheet_mdddata_variables as sheet
-    import columns_sheet_mdddata_categories
+from . import aa_logic
+from . import util_performance_monitor as util_perf
+from . import util_dataframe_wrapper
+from .column_definitions import sheet_variables
+from .column_definitions import sheet_mdddata_variables as sheet
+from .column_definitions import sheet_mdddata_categories
 
 
 
@@ -41,7 +20,7 @@ CONFIG_VALIDATION_MAX_SHORTNAME_LENGTH = 50
 
 def helper_parse_shortname_formula(txt):
     def repl_cat_analysisvalue(matches):
-        substitute_part = 'VLOOKUP("{var}.Categories[{cat}]",\'{sheet_name}\'!$A2:${col_last}999999,{vlookup_index},FALSE)'.format(var=matches[1],cat=matches[2],sheet_name=columns_sheet_mdddata_categories.sheet_name,col_last=columns_sheet_mdddata_categories.column_letters['col_analysisvalue'],vlookup_index=columns_sheet_mdddata_categories.column_vlookup_index['col_analysisvalue'])
+        substitute_part = 'VLOOKUP("{var}.Categories[{cat}]",\'{sheet_name}\'!$A2:${col_last}999999,{vlookup_index},FALSE)'.format(var=matches[1],cat=matches[2],sheet_name=sheet_mdddata_categories.sheet_name,col_last=sheet_mdddata_categories.column_letters['col_analysisvalue'],vlookup_index=sheet_mdddata_categories.column_vlookup_index['col_analysisvalue'])
         substitute_part = 'IF(LEN({A})=1,"00"&{A},IF(LEN({A})=2,"0"&{A},{A}))'.format(A=substitute_part)
         return '"&{formula}&"'.format(formula=substitute_part)
     def repl_var_shortname(matches):
@@ -56,7 +35,8 @@ def helper_parse_shortname_formula(txt):
 
 
 
-def build_df(mdmvariables,df_prev,config):
+def build_df(mdd,prev_map,config):
+    mdmvariables = mdd.variables
     data = util_dataframe_wrapper.PandasDataframeWrapper(sheet.columns)
 
     performance_counter = iter(util_perf.PerformanceMonitor(config={
@@ -73,51 +53,51 @@ def build_df(mdmvariables,df_prev,config):
         substitutes = {
             **sheet.column_letters,
             'row': data.get_working_row_number(),
-            'sheet_name_variables': columns_sheet_variables.sheet_name,
-            'col_variablessheet_col_last': columns_sheet_variables.column_letters[columns_sheet_variables.column_aliases[-1]],
-            'col_variablessheet_label_vlookup_index': columns_sheet_variables.column_vlookup_index['col_label'],
-            'col_variablessheet_shortname_vlookup_index': columns_sheet_variables.column_vlookup_index['col_shortname'],
-            'col_variablessheet_include_vlookup_index': columns_sheet_variables.column_vlookup_index['col_include'],
-            'col_variablessheet_comment_vlookup_index': columns_sheet_variables.column_vlookup_index['col_comment'],
+            'sheet_name_variables': sheet_variables.sheet_name,
+            'col_variablessheet_col_last': sheet_variables.column_letters[sheet_variables.column_aliases[-1]],
+            'col_variablessheet_label_vlookup_index': sheet_variables.column_vlookup_index['col_label'],
+            'col_variablessheet_shortname_vlookup_index': sheet_variables.column_vlookup_index['col_shortname'],
+            'col_variablessheet_include_vlookup_index': sheet_variables.column_vlookup_index['col_include'],
+            'col_variablessheet_comment_vlookup_index': sheet_variables.column_vlookup_index['col_comment'],
         }
 
         question_name = mdmvariable.FullName
 
         question_data_items_within_parent_wing = \
             [ '$A{row}'.format(**substitutes) ] \
-            if util_mdmvars.is_data_item(mdmvariable) \
+            if mdd.is_data_item(mdmvariable) \
             else [
-                '"{name}"'.format(name=mdmitem.FullName) for mdmitem in util_mdmvars.list_mdmdatafields_recursively(mdmvariable)
+                '"{name}"'.format(name=mdmitem.FullName) for mdmitem in mdd.list_mdmdatafields_recursively(mdmvariable)
             ]
 
-        question_type = util_mdmvars.compile_question_type_description(mdmvariable)
+        question_type = mdd.compile_question_type_description(mdmvariable)
 
-        question_isdatavariable = True if util_mdmvars.is_data_item(mdmvariable) else False
+        question_isdatavariable = True if mdd.is_data_item(mdmvariable) else False
 
         question_label_mdd = '{s}'.format(s=mdmvariable.Label)
 
-        question_label_prev = df_prev.loc[question_name,sheet.column_names['col_label']] if df_prev is not None and question_name in df_prev.index.get_level_values(0) else ''
+        question_label_prev = prev_map.read_question_label(question_name)
 
         question_label_lookup = 'VLOOKUP($A{row},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_label_vlookup_index},FALSE)&""'.format(**substitutes)
         question_label = '=IF(ISERROR({val}),${col_label_mdd}{row}&"",{val})'.format(**substitutes,val=question_label_lookup)
 
-        question_shortname_mdd = helper_parse_shortname_formula(aa_logic.read_shortname(mdmvariable))
+        question_shortname_mdd = helper_parse_shortname_formula(aa_logic.read_shortname(mdmvariable,mdd))
 
-        question_shortname_prev = helper_parse_shortname_formula( df_prev.loc[question_name,sheet.column_names['col_shortname']] if df_prev is not None and question_name in df_prev.index.get_level_values(0) else '' )
+        question_shortname_prev = helper_parse_shortname_formula( prev_map.read_question_shortname(question_name) )
 
         question_shortname = '=' + '&", "&'.join([
             'VLOOKUP({item_name},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_shortname_vlookup_index},FALSE)&""'.format(**substitutes,item_name='$A{row}'.format(**substitutes) if item_name==question_name else item_name) for item_name in question_data_items_within_parent_wing
         ]) + '&""'
         question_shortname = question_shortname.replace('=&','=""&')
 
-        question_comment_prev = df_prev.loc[question_name,sheet.column_names['col_comment']] if df_prev is not None and question_name in df_prev.index.get_level_values(0) else ''
+        question_comment_prev = prev_map.read_question_comment(question_name)
 
-        question_comment_lookup = 'VLOOKUP($A{row},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_comment_vlookup_index},FALSE)'.format(**substitutes)
+        question_comment_lookup = 'VLOOKUP($A{row},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_comment_vlookup_index},FALSE)&""'.format(**substitutes)
         question_comment = '=IF(ISERROR({val}),"",{val})'.format(val=question_comment_lookup)
 
-        question_include_mdd = '' if not util_mdmvars.is_data_item(mdmvariable) else ( False if aa_logic.should_exclude(mdmvariable) else True )
+        question_include_mdd = '' if not mdd.is_data_item(mdmvariable) else ( False if aa_logic.should_exclude(mdmvariable,mdd) else True )
 
-        question_include_prev = df_prev.loc[question_name,sheet.column_names['col_include']] if df_prev is not None and question_name in df_prev.index.get_level_values(0) else ''
+        question_include_prev = prev_map.read_question_is_included(question_name)
 
         question_include_lookup = 'IF(' + '&'.join(['""']+[
             'VLOOKUP({item_name},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_include_vlookup_index},FALSE)&""'.format(**substitutes,item_name='$A{row}'.format(**substitutes) if item_name==question_name else item_name) for item_name in question_data_items_within_parent_wing
