@@ -72,6 +72,12 @@ class Map:
         config = self.config
 
         result = Map(None,config=self.config)
+        result.df_overview = self.df_overview
+        result.df_mdddata_variables = self.df_mdddata_variables
+        result.df_mdddata_categories = self.df_mdddata_categories
+        result.df_userinput_variables = self.df_userinput_variables
+        result.df_userinput_analysisvalues = self.df_userinput_analysisvalues
+        result.df_validation = self.df_validation
 
         print('building "Overview" sheet...')
         result.df_overview                 = build_sheet_overview.build_df(mdd,config)
