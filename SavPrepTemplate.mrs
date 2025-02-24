@@ -161,7 +161,7 @@ Sub SetAlias(oField,Shortname)
         	'sOwnIterativeAliasPart = "" ' TODO:
 			dim re, re_Matches
 			set re = CreateObject("VBScript.RegExp")
-			re.Pattern = "^(.*?)((?:_[0-9]{3})*)$"
+			re.Pattern = "^(.*?)((?:(?:(?:_[0-9]{3})|(?:_Other_[0-9]{3})))*)$"
 			re.IgnoreCase = True
 			re.Global = True
 			
@@ -173,7 +173,7 @@ Sub SetAlias(oField,Shortname)
 				sBaseAliasPart = Shortname
 				sOwnIterativeAliasPart = ""
 			end if
-        	sCategoricalIterativeAliasPart = "" ' TODO:
+        	sCategoricalIterativeAliasPart = ""
             sAlias = sBaseAliasPart + sCategoricalIterativeAliasPart + sLoopIterativeAliasPart + sOwnIterativeAliasPart
             oVariableInstance.AliasName = sAlias
         	If oVariableInstance.DataType = 3 Then ' 3 == Mr.Categorical
