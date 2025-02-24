@@ -76,28 +76,40 @@ def build_df(mdd,prev_map,config):
 
         question_label_mdd = '{s}'.format(s=mdmvariable.Label)
 
-        question_label_prev = prev_map.read_question_label(question_name)
+        try:
+            question_label_prev = prev_map.read_question_label(question_name)
+        except prev_map.CellNotFound:
+            question_label_prev = None
 
         question_label_lookup = 'VLOOKUP($A{row},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_label_vlookup_index},FALSE)&""'.format(**substitutes)
         question_label = '=IF(ISERROR({val}),${col_label_mdd}{row}&"",{val})'.format(**substitutes,val=question_label_lookup)
 
         question_shortname_mdd = helper_parse_shortname_formula(aa_logic.read_shortname(mdmvariable,mdd))
 
-        question_shortname_prev = helper_parse_shortname_formula( prev_map.read_question_shortname(question_name) )
+        try:
+            question_shortname_prev = helper_parse_shortname_formula( prev_map.read_question_shortname(question_name) )
+        except prev_map.CellNotFound:
+            question_shortname_prev = None
 
         question_shortname = '=' + '&", "&'.join([
             'VLOOKUP({item_name},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_shortname_vlookup_index},FALSE)&""'.format(**substitutes,item_name='$A{row}'.format(**substitutes) if item_name==question_name else item_name) for item_name in question_data_items_within_parent_wing
         ]) + '&""'
         question_shortname = question_shortname.replace('=&','=""&')
 
-        question_comment_prev = prev_map.read_question_comment(question_name)
+        try:
+            question_comment_prev = prev_map.read_question_comment(question_name)
+        except prev_map.CellNotFound:
+            question_comment_prev = None
 
         question_comment_lookup = 'VLOOKUP($A{row},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_comment_vlookup_index},FALSE)&""'.format(**substitutes)
         question_comment = '=IF(ISERROR({val}),"",{val})'.format(val=question_comment_lookup)
 
         question_include_mdd = '' if not mdd.is_data_item(mdmvariable) else ( False if aa_logic.should_exclude(mdmvariable,mdd) else True )
 
-        question_include_prev = prev_map.read_question_is_included(question_name)
+        try:
+            question_include_prev = prev_map.read_question_is_included(question_name)
+        except prev_map.CellNotFound:
+            question_include_prev = None
 
         question_include_lookup = 'IF(' + '&'.join(['""']+[
             'VLOOKUP({item_name},\'{sheet_name_variables}\'!$A$2:${col_variablessheet_col_last}$999999,{col_variablessheet_include_vlookup_index},FALSE)&""'.format(**substitutes,item_name='$A{row}'.format(**substitutes) if item_name==question_name else item_name) for item_name in question_data_items_within_parent_wing

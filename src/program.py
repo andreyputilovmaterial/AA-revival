@@ -97,29 +97,32 @@ def cli_program_update_map():
     if args.mdd:
         mdd_filename = Path(args.mdd)
         mdd_filename = '{fname}'.format(fname=mdd_filename.resolve())
-        if not(Path(mdd_filename).is_file()):
+        if not mdd_filename or not(Path(mdd_filename).is_file()):
             raise FileNotFoundError('file not found: {fname}'.format(fname=mdd_filename))
         print('{script_name}: reading mdd "{fname}"'.format(fname=mdd_filename,script_name=script_name))
         mdd = MDD(mdd_filename)
 
     map_filename = None
-    map_df = None
+    map = None
     if args.map:
         map_filename = Path(args.map)
         map_filename = '{fname}'.format(fname=map_filename.resolve())
-        if Path(map_filename).is_file():
+        if not not map_filename and Path(map_filename).is_file():
             print('{script_name}: reading map "{fname}"'.format(fname=map_filename,script_name=script_name))
-            map_df = Map(map_filename,config)
+            map = Map(map_filename,config)
         else:
             if 'create_map_if_not_exists' in config and config['create_map_if_not_exists']:
                 pass
             else:
                 raise FileNotFoundError('file not found: {fname}'.format(fname=map_filename))
     
+    if not map:
+        map = Map(None,config)
+    
     config['mdd_file_provided'] = not not mdd_filename
     config['map_file_provided'] = not not map_filename
-    config['mdd_file_exists'] = not not map_df
-    config['map_file_exists'] = not not mdd
+    config['mdd_file_exists'] = not not mdd_filename and Path(mdd_filename).is_file()
+    config['map_file_exists'] = not not map_filename and Path(map_filename).is_file()
     config['mdd_filename'] = mdd_filename if mdd_filename else ''
     config['map_filename'] = map_filename if map_filename else ''
 
@@ -133,7 +136,7 @@ def cli_program_update_map():
             # relative to AA Excel Map file
             mdd_filename = ( ( Path(map_filename) if Path(map_filename).is_dir() else Path(map_filename).parents[0] ) if map_filename else Path('.') ) / mdd_filename
         mdd_filename = '{fname}'.format(fname=mdd_filename.resolve())
-        if not(Path(mdd_filename).is_file()):
+        if not mdd_filename or not(Path(mdd_filename).is_file()):
             raise FileNotFoundError('file not found: {fname}'.format(fname=mdd_filename))
         print('{script_name}: reading MDD "{fname}"'.format(fname=mdd_filename,script_name=script_name))
         mdd = MDD(mdd_filename)
@@ -141,14 +144,14 @@ def cli_program_update_map():
 
     out_filename = map_filename if map_filename else ( ( Path(mdd_filename) if Path(mdd_filename).is_dir() else Path(mdd_filename).parents[0] ) if mdd_filename else Path('.') ) / 'AnalysisAuthorRevival.xlsx'
     out_filename = Path(out_filename)
-    if Path(map_filename).is_file():
+    if not not map_filename and Path(map_filename).is_file():
         if not config['skip_map_backup']:
             print('{script_name}: creating backup of the map: {map}'.format(script_name=script_name,map=out_filename))
             create_backup(out_filename,config)
     assert out_filename, 'out filename is still missing, please check the code'
 
     print('{script_name}: working, updating the map'.format(script_name=script_name))
-    result_df = map_df.update(mdd)
+    result_df = map.update(mdd)
     
     print('{script_name}: saving as "{fname}"'.format(fname=out_filename,script_name=script_name))
     result_df.write_to_file(out_filename)
@@ -198,21 +201,21 @@ def cli_program_produce_savprep_mrs():
     if args.mdd:
         mdd_filename = Path(args.mdd)
         mdd_filename = '{fname}'.format(fname=mdd_filename.resolve())
-        if not(Path(mdd_filename).is_file()):
+        if not not mdd_filename and not(Path(mdd_filename).is_file()):
             raise FileNotFoundError('file not found: {fname}'.format(fname=mdd_filename))
         print('{script_name}: reading mdd "{fname}"'.format(fname=mdd_filename,script_name=script_name))
         mdd = MDD(mdd_filename)
     else:
         raise FileNotFoundError('MDD: file not provided; please use --mdd option')
 
-    map_df = None
+    map = None
     if args.map:
         map_filename = Path(args.map)
         map_filename = '{fname}'.format(fname=map_filename.resolve())
-        if not(Path(map_filename).is_file()):
+        if not mdd_filename or not(Path(map_filename).is_file()):
             raise FileNotFoundError('file not found: {fname}'.format(fname=map_filename))
         print('{script_name}: reading map "{fname}"'.format(fname=map_filename,script_name=script_name))
-        map_df = Map(map_filename,config)
+        map = Map(map_filename,config)
     else:
         raise FileNotFoundError('Map: file not provided; please use --map option')
 
@@ -242,7 +245,7 @@ def cli_program_produce_savprep_mrs():
     #         outfile.write(result_template)
 
     print('{script_name}: working, generating mrs script, include addin'.format(script_name=script_name))
-    result_include_addin = write_mrs.generate_savprep_mrs_include_part(mdd,map_df,config)
+    result_include_addin = write_mrs.generate_savprep_mrs_include_part(mdd,map,config)
 
     print('{script_name}: saving as "{fname}"'.format(fname=out_filename_include_addin,script_name=script_name))
     with open(out_filename_include_addin, "wb") as outfile:

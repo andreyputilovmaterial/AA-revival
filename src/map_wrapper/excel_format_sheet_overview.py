@@ -58,8 +58,8 @@ def format_sheet_overview(sheet):
     #         cell.font = font_header
     #         row[0].alignment = alignment_indent
     #         row[1].alignment = alignment_center
-    for num, row in enumerate([r for r in sheet.rows][2:]):
-        sheet.row_dimensions[num+2].height = 25
+    for row_number, row in enumerate([r for r in sheet.rows][1:]):
+        sheet.row_dimensions[row_number+2].height = 25
         for cell in row:
             cell.fill = fill_main
             cell.font = font_main

@@ -77,7 +77,14 @@ def generate_savprep_mrs_include_part(mdd,map,config):
                 category_name = category.Name
 
                 category_analysisvalue = map.read_category_analysisvalue(question_name,category_name)
+                if isinstance(category_analysisvalue,str):
+                    if re.match(r'^\s*?$',category_analysisvalue,flags=re.I|re.DOTALL): # if empty, set true emptyness
+                        category_analysisvalue = None
                 category_label = map.read_category_label(question_name,category_name)
+
+                if is_included:
+                    if category_analysisvalue is None:
+                        raise Exception('Error: category analysis value is missing for "{cat}"'.format(cat='{var}.Categories["{catname}"]'.format(var=question_name,catname=category_name)))
 
                 result = result + '{apostrophe}set oCategory = oField.Categories["{catname}"]\n'.format(catname=category_name,apostrophe='' if category_analysisvalue is not None else '\'')
                 result = result + '{apostrophe}oCategory.Label = "{val}"\n'.format(val=sanitize_txt_escape_quotes(category_label),apostrophe='' if category_analysisvalue is not None else '\'')

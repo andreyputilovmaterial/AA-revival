@@ -6,10 +6,10 @@ from openpyxl.utils import get_column_letter as openpyxl_get_column_letter
 
 
 # this is a helper class
-# a wrapper around pandas datafra,e
+# a wrapper around pandas dataframe
 # to make appending or inserting new rows faster
 # when we add or insert a row to a pandas df object, it's slow - pandas is creating a copy every time, and is checking for indexes
-# instead, we'll be building or data sheet in simple python objects - lists and dicts
+# instead, we'll be building our data sheet in simple python objects - lists and dicts
 # which is fast
 # and we'll convert it to a pandas df in one op, which is fast
 

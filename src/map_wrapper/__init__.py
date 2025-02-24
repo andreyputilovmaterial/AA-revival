@@ -23,66 +23,41 @@ from .column_definitions import sheet_validation
 
 
 
-def has_value_numeric(arg):
-    if pd.isna(arg):
-        return False
-    if arg is None:
-        return False
-    if arg==0:
-        return True
-    if arg == False:
-        return True # false evaluates to 0 which is numeric
-    if arg=='':
-        return False
-    return not not arg
-
-def has_value_text(arg):
-    if pd.isna(arg):
-        return False
-    if arg is None:
-        return False
-    if arg==0:
-        return True
-    if arg == False:
-        return False
-    if arg=='':
-        return False
-    return not not arg
-
-
 
 
 
 
 class Map:
+    class CellNotFound(Exception):
+        """Cell not found"""
     def __init__(self,map_filename=None,config={}):
 
         if map_filename:
             with pd.ExcelFile(map_filename,engine='openpyxl') as xls:
-                overview_df = xls.parse(sheet_name=sheet_overview.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
-                variables_df = xls.parse(sheet_name=sheet_variables.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
-                analysisvalues_df = xls.parse(sheet_name=sheet_analysisvalues.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
-                # analysisvalues_df = xls.parse(sheet_name=sheet_analysisvalues.sheet_name, header=0, index_col=0, dtype=str, keep_default_na=False).fillna('')
-                # analysisvalues_df = analysisvalues_df.convert_dtypes(convert_boolean=False)
-                validationissues_df = xls.parse(sheet_name=sheet_validation.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
-                mdd_data_variables_df = xls.parse(sheet_name=sheet_mdddata_variables.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
-                mdd_data_categories_df = xls.parse(sheet_name=sheet_mdddata_categories.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
+                df_overview = xls.parse(sheet_name=sheet_overview.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
+                df_userinput_variables = xls.parse(sheet_name=sheet_variables.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
+                df_userinput_analysisvalues = xls.parse(sheet_name=sheet_analysisvalues.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
+                # df_userinput_analysisvalues = xls.parse(sheet_name=sheet_analysisvalues.sheet_name, header=0, index_col=0, dtype=str, keep_default_na=False).fillna('')
+                # df_userinput_analysisvalues = df_userinput_analysisvalues.convert_dtypes(convert_boolean=False)
+                df_validation = xls.parse(sheet_name=sheet_validation.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
+                df_mdddata_variables = xls.parse(sheet_name=sheet_mdddata_variables.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
+                df_mdddata_categories = xls.parse(sheet_name=sheet_mdddata_categories.sheet_name, header=0, index_col=0, keep_default_na=False).fillna('')
         else:
-            overview_df, variables_df, analysisvalues_df, validationissues_df, mdd_data_variables_df, mdd_data_categories_df = ( None, None, None, None, None, None, )
+            df_overview, df_userinput_variables, df_userinput_analysisvalues, df_validation, df_mdddata_variables, df_mdddata_categories = ( None, None, None, None, None, None, )
 
-        self.overview_df = overview_df
-        self.variables_df = variables_df
-        self.analysisvalues_df = analysisvalues_df
-        self.validationissues_df = validationissues_df
-        self.mdd_data_variables_df = mdd_data_variables_df
-        self.mdd_data_categories_df = mdd_data_categories_df
+        self.df_overview = df_overview
+        self.df_userinput_variables = df_userinput_variables
+        self.df_userinput_analysisvalues = df_userinput_analysisvalues
+        self.df_validation = df_validation
+        self.df_mdddata_variables = df_mdddata_variables
+        self.df_mdddata_categories = df_mdddata_categories
 
         self.config = config
 
 
 
     def get_mdd_path(self):
-        df =self.overview_df
+        df = self.df_overview
         try:
             mdd_filename = df.at['MDD path','Value']
         except Exception as e:
@@ -96,35 +71,21 @@ class Map:
 
         config = self.config
 
-        overview_df = self.overview_df
-        variables_df = self.variables_df
-        analysisvalues_df = self.analysisvalues_df
-        validationissues_df = self.validationissues_df
-        mdd_data_variables_df = self.mdd_data_variables_df
-        mdd_data_categories_df = self.mdd_data_categories_df
-
-        print('building "Overview" sheet...')
-        overview_df                 = build_sheet_overview.build_df(mdd,config)
-        print('building "MDD_Data_Variables" (hidden) sheet...')
-        mdd_data_variables_df       = build_sheet_mdddata_variables.build_df(mdd,self,config)
-        print('building "Variables" sheet...')
-        variables_df                = build_sheet_variables.build_df(mdd,self,config)
-        print('building "MDD_Data_Categories" (hidden) sheet...')
-        mdd_data_categories_df      = build_sheet_mdddata_categories.build_df(mdd,self,config)
-        print('building "Analysis Values" sheet...')
-        analysisvalues_df               = build_sheet_analysisvalues.build_df(mdd,self,config)
-        print('building "Validation Issues Log" sheet...')
-        validationissues_df         = build_sheet_validation.build_df(config)
-        
         result = Map(None,config=self.config)
 
-        result.overview_df = overview_df
-        result.variables_df = variables_df
-        result.analysisvalues_df = analysisvalues_df
-        result.validationissues_df = validationissues_df
-        result.mdd_data_variables_df = mdd_data_variables_df
-        result.mdd_data_categories_df = mdd_data_categories_df
-
+        print('building "Overview" sheet...')
+        result.df_overview                 = build_sheet_overview.build_df(mdd,config)
+        print('building "MDD_Data_Variables" (hidden) sheet...')
+        result.df_mdddata_variables        = build_sheet_mdddata_variables.build_df(mdd,result,config)
+        print('building "MDD_Data_Categories" (hidden) sheet...')
+        result.df_mdddata_categories       = build_sheet_mdddata_categories.build_df(mdd,result,config)
+        print('building "Variables" sheet...')
+        result.df_userinput_variables      = build_sheet_variables.build_df(mdd,result,config)
+        print('building "Analysis Values" sheet...')
+        result.df_userinput_analysisvalues = build_sheet_analysisvalues.build_df(mdd,result,config)
+        print('building "Validation Issues Log" sheet...')
+        result.df_validation               = build_sheet_validation.build_df(config)
+        
         return result
 
 
@@ -133,25 +94,21 @@ class Map:
 
         config = self.config
 
-        overview_df = self.overview_df
-        variables_df = self.variables_df
-        analysisvalues_df = self.analysisvalues_df
-        validationissues_df = self.validationissues_df
-        mdd_data_variables_df = self.mdd_data_variables_df
-        mdd_data_categories_df = self.mdd_data_categories_df
+        df_overview = self.df_overview
+        df_userinput_variables = self.df_userinput_variables
+        df_userinput_analysisvalues = self.df_userinput_analysisvalues
+        df_validation = self.df_validation
+        df_mdddata_variables = self.df_mdddata_variables
+        df_mdddata_categories = self.df_mdddata_categories
 
         
-        # excel_format_sheet.format_sheet_overview(overview_df)
-        # excel_format_sheet.format_sheet_variables(variables_df)
-        # excel_format_sheet.format_sheet_analysisvalues(analysisvalues_df)
         with pd.ExcelWriter(out_filename, engine='openpyxl') as writer:
-            overview_df.to_excel(writer, sheet_name=sheet_overview.sheet_name)
-            variables_df.to_excel(writer, sheet_name=sheet_variables.sheet_name)
-            analysisvalues_df.to_excel(writer, sheet_name=sheet_analysisvalues.sheet_name)
-            validationissues_df.to_excel(writer, sheet_name=sheet_validation.sheet_name)
-            mdd_data_variables_df.to_excel(writer, sheet_name=sheet_mdddata_variables.sheet_name)
-            mdd_data_categories_df.to_excel(writer, sheet_name=sheet_mdddata_categories.sheet_name)
-            # mdd_data_validation_df.to_excel(writer, sheet_name='ValidationVariables')
+            df_overview.to_excel(writer, sheet_name=sheet_overview.sheet_name)
+            df_userinput_variables.to_excel(writer, sheet_name=sheet_variables.sheet_name)
+            df_userinput_analysisvalues.to_excel(writer, sheet_name=sheet_analysisvalues.sheet_name)
+            df_validation.to_excel(writer, sheet_name=sheet_validation.sheet_name)
+            df_mdddata_variables.to_excel(writer, sheet_name=sheet_mdddata_variables.sheet_name)
+            df_mdddata_categories.to_excel(writer, sheet_name=sheet_mdddata_categories.sheet_name)
             excel_format_sheet.format_sheet_overview(writer.sheets[sheet_overview.sheet_name])
             excel_format_sheet.format_with_stdstyles(writer.sheets[sheet_variables.sheet_name])
             excel_format_sheet.format_sheet_variables(writer.sheets[sheet_variables.sheet_name])
@@ -161,71 +118,156 @@ class Map:
             excel_format_sheet.format_sheet_validation(writer.sheets[sheet_validation.sheet_name])
             excel_format_sheet.format_with_stdstyles(writer.sheets[sheet_mdddata_variables.sheet_name])
             excel_format_sheet.format_with_stdstyles(writer.sheets[sheet_mdddata_categories.sheet_name])
-            # excel_format_sheet.format_with_stdstyles(writer.sheets['ValidationVariables'])
             writer.sheets[sheet_mdddata_variables.sheet_name].protection.sheet = True # openpyxl-specific syntax
             writer.sheets[sheet_mdddata_variables.sheet_name].sheet_state = 'hidden' # openpyxl-specific syntax
             writer.sheets[sheet_mdddata_categories.sheet_name].protection.sheet = True # openpyxl-specific syntax
             writer.sheets[sheet_mdddata_categories.sheet_name].sheet_state = 'hidden' # openpyxl-specific syntax
-            # writer.sheets['ValidationVariables'].protection.sheet = True # openpyxl-specific syntax
-            # writer.sheets['ValidationVariables'].sheet_state = 'hidden' # openpyxl-specific syntax
-            # writer.sheets[sheet_mdddata_variables.sheet_name].protect()
-            # writer.sheets[sheet_mdddata_categories.sheet_name].protect()
-            # writer.sheets['ValidationVariables'].protect()
-            # writer.sheets[sheet_mdddata_variables.sheet_name].hide()
-            # writer.sheets[sheet_mdddata_categories.sheet_name].hide()
-            # writer.sheets['ValidationVariables'].hide()
 
 
+    @staticmethod
+    def has_value_numeric(arg):
+        if pd.isna(arg):
+            return False
+        if arg is None:
+            return False
+        if arg==0:
+            return True
+        if arg == False:
+            return True # false evaluates to 0 which is numeric
+        if arg=='':
+            return False
+        return not not arg
 
+    @staticmethod
+    def has_value_text(arg):
+        if pd.isna(arg):
+            return False
+        if arg is None:
+            return False
+        if arg==0:
+            return True
+        if arg == False:
+            return False
+        if arg=='':
+            return False
+        return not not arg
 
+    def read_question_is_included_column_userinput(self,question_name):
+        if self.df_userinput_variables is None or question_name not in self.df_userinput_variables.index.get_level_values(0):
+            raise self.CellNotFound('"is_included" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_variables.sheet_name))
+        value = self.df_userinput_variables.loc[question_name,sheet_variables.column_names['col_include']]
+        value = not not value # convert "x" to True - uniform looking data type, so that does not surprise me later
+        return value
+
+    def read_question_is_included_column_historic(self,question_name):
+        if self.df_mdddata_variables is None or question_name not in self.df_mdddata_variables.index.get_level_values(0):
+            raise self.CellNotFound('"is_included_prev" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_mdddata_variables.sheet_name))
+        # value = self.df_mdddata_variables.loc[question_name,sheet_mdddata_variables.column_names['col_include']]
+        # if not self.has_value_numeric(value):
+        value = self.df_mdddata_variables.loc[question_name,sheet_mdddata_variables.column_names['col_include_prev']]
+        return value
+        
+    def read_question_is_included_column_mdd(self,question_name):
+        if self.df_mdddata_variables is None or question_name not in self.df_mdddata_variables.index.get_level_values(0):
+            raise self.CellNotFound('"is_included_mdd" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_mdddata_variables.sheet_name))
+        value = self.df_mdddata_variables.loc[question_name,sheet_mdddata_variables.column_names['col_include_mdd']]
+        return value
+        
     def read_question_is_included(self,question_name):
-        assert question_name in self.mdd_data_variables_df.index.get_level_values(0), 'Error: please reload the map; "{var}" variable is found in MDD but it missing in the map. Please make sure the Map is up to date, reload the Map first'.format(var=question_name)
-        if question_name in self.variables_df.index.get_level_values(0):
-            value = self.variables_df.loc[question_name,sheet_variables.column_names['col_include']]
-            value = not not value # convert "x" to True - uniform looking data type, so that does not surprise me later
-        else:
-            value = self.mdd_data_variables_df.loc[question_name,sheet_mdddata_variables.column_names['col_include']]
-            if not has_value_numeric(value):
-                value = self.mdd_data_variables_df.loc[question_name,sheet_mdddata_variables.column_names['col_include_prev']]
+        try:
+            return self.read_question_is_included_column_userinput(question_name)
+        except self.CellNotFound:
+            value = self.read_question_is_included_column_historic(question_name)
+            # if not self.has_value_numeric(value):
+            #     value = self.read_question_is_included_column_mdd(question_name)
+            return value
+
+    def read_question_shortname_column_userinput(self,question_name):
+        if self.df_userinput_variables is None or question_name not in self.df_userinput_variables.index.get_level_values(0):
+            raise self.CellNotFound('"shortname" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_variables.sheet_name))
+        value = self.df_userinput_variables.loc[question_name,sheet_variables.column_names['col_shortname']]
         return value
 
+    def read_question_shortname_column_historic(self,question_name):
+        if self.df_mdddata_variables is None or question_name not in self.df_mdddata_variables.index.get_level_values(0):
+            raise self.CellNotFound('"shortname_prev" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_mdddata_variables.sheet_name))
+        # value = self.df_mdddata_variables.loc[question_name,sheet_mdddata_variables.column_names['col_shortname']]
+        # if not self.has_value_text(value):
+        value = self.df_mdddata_variables.loc[question_name,sheet_mdddata_variables.column_names['col_shortname_prev']]
+        return value
+        
+    def read_question_shortname_column_mdd(self,question_name):
+        if self.df_mdddata_variables is None or question_name not in self.df_mdddata_variables.index.get_level_values(0):
+            raise self.CellNotFound('"shortname_mdd" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_mdddata_variables.sheet_name))
+        value = self.df_mdddata_variables.loc[question_name,sheet_mdddata_variables.column_names['col_shortname_mdd']]
+        return value
+        
     def read_question_shortname(self,question_name):
-        assert question_name in self.mdd_data_variables_df.index.get_level_values(0), 'Error: please reload the map; "{var}" variable is found in MDD but it missing in the map. Please make sure the Map is up to date, reload the Map first'.format(var=question_name)
-        if question_name in self.variables_df.index.get_level_values(0):
-            value = self.variables_df.loc[question_name,sheet_variables.column_names['col_shortname']]
-        else:
-            value = self.mdd_data_variables_df.loc[question_name,sheet_mdddata_variables.column_names['col_shortname']]
-            if not has_value_text(value):
-                value = self.mdd_data_variables_df.loc[question_name,sheet_mdddata_variables.column_names['col_shortname_prev']]
+        try:
+            return self.read_question_shortname_column_userinput(question_name)
+        except self.CellNotFound:
+            value = self.read_question_shortname_column_historic(question_name)
+            # if not self.has_value_text(value):
+            #     value = self.read_question_shortname_column_mdd(question_name)
+            return value
+
+    def read_question_label_column_userinput(self,question_name):
+        if self.df_userinput_variables is None or question_name not in self.df_userinput_variables.index.get_level_values(0):
+            raise self.CellNotFound('"label" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_variables.sheet_name))
+        value = self.df_userinput_variables.loc[question_name,sheet_variables.column_names['col_label']]
         return value
 
+    def read_question_label_column_historic(self,question_name):
+        if self.df_mdddata_variables is None or question_name not in self.df_mdddata_variables.index.get_level_values(0):
+            raise self.CellNotFound('"label_prev" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_mdddata_variables.sheet_name))
+        # value = self.df_mdddata_variables.loc[question_name,sheet_mdddata_variables.column_names['col_label']]
+        # if not self.has_value_text(value):
+        value = self.df_mdddata_variables.loc[question_name,sheet_mdddata_variables.column_names['col_label_prev']]
+        return value
+        
+    def read_question_label_column_mdd(self,question_name):
+        if self.df_mdddata_variables is None or question_name not in self.df_mdddata_variables.index.get_level_values(0):
+            raise self.CellNotFound('"label_mdd" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_mdddata_variables.sheet_name))
+        value = self.df_mdddata_variables.loc[question_name,sheet_mdddata_variables.column_names['col_label_mdd']]
+        return value
+        
     def read_question_label(self,question_name):
-        if question_name in self.variables_df.index.get_level_values(0):
-            value = self.variables_df.loc[question_name,sheet_variables.column_names['col_label']]
-        else:
-            value = self.mdd_data_variables_df.loc[question_name,sheet_mdddata_variables.column_names['col_label']]
-            if not has_value_text(value):
-                value = self.mdd_data_variables_df.loc[question_name,sheet_mdddata_variables.column_names['col_label_prev']]
+        try:
+            return self.read_question_label_column_userinput(question_name)
+        except self.CellNotFound:
+            value = self.read_question_label_column_historic(question_name)
+            # if not self.has_value_text(value):
+            #     value = self.read_question_label_column_mdd(question_name)
+            return value
+
+    def read_question_comment_column_userinput(self,question_name):
+        if self.df_userinput_variables is None or question_name not in self.df_userinput_variables.index.get_level_values(0):
+            raise self.CellNotFound('"comment" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_variables.sheet_name))
+        value = self.df_userinput_variables.loc[question_name,sheet_variables.column_names['col_comment']]
         return value
 
+    def read_question_comment_column_historic(self,question_name):
+        if self.df_mdddata_variables is None or question_name not in self.df_mdddata_variables.index.get_level_values(0):
+            raise self.CellNotFound('"comment_prev" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_mdddata_variables.sheet_name))
+        # value = self.df_mdddata_variables.loc[question_name,sheet_mdddata_variables.column_names['col_comment']]
+        # if not self.has_value_text(value):
+        value = self.df_mdddata_variables.loc[question_name,sheet_mdddata_variables.column_names['col_comment_prev']]
+        return value
+        
     def read_question_comment(self,question_name):
-        if question_name in self.variables_df.index.get_level_values(0):
-            value = self.variables_df.loc[question_name,sheet_variables.column_names['col_comment']]
-        else:
-            value = self.mdd_data_variables_df.loc[question_name,sheet_mdddata_variables.column_names['col_comment']]
-            if not has_value_text(value):
-                value = self.mdd_data_variables_df.loc[question_name,sheet_mdddata_variables.column_names['col_comment_prev']]
-        # if value==0 or value=='0': # dirty, sorry: suppressing some artifacts from vlookup
-        #     return ''
-        return value
+        try:
+            return self.read_question_comment_column_userinput(question_name)
+        except self.CellNotFound:
+            value = self.read_question_comment_column_historic(question_name)
+            return value
 
-    def read_category_analysisvalue(self,question_name,category_name):
+
+    def read_category_analysisvalue_column_userinput(self,question_name,category_name):
         value = None
-        found_user_input = False
         category_path = '{var}.Categories[{cat}]'.format(var=question_name,cat=category_name)
-        if question_name in self.analysisvalues_df.index.get_level_values(0):
-            row_number = self.analysisvalues_df.index.get_loc(question_name)
-            row_category_names = self.analysisvalues_df.iloc[row_number,1:].tolist()
+        if self.df_userinput_analysisvalues is not None and question_name in self.df_userinput_analysisvalues.index.get_level_values(0):
+            row_number = self.df_userinput_analysisvalues.index.get_loc(question_name)
+            row_category_names = self.df_userinput_analysisvalues.iloc[row_number,1:].tolist()
             if category_name in row_category_names:
                 # an issue is happening here
                 # pandas keeps reading 1's as True, and I can't find a workaround
@@ -237,45 +279,96 @@ class Map:
                 # I add a breakpoint here, and I see True, not 1, whatever I do
                 # crazy
 
-                # row_category_labels = self.analysisvalues_df.iloc[row_number+1,1:].tolist()
-                row_category_analysisvalues = pd.Series(self.analysisvalues_df.iloc[row_number+2,1:],dtype=int).tolist()
-                # row_category_analysisvalues = pd.Series(self.analysisvalues_df.iloc[row_number+2,1:],dtype=int).astype(int).tolist()
-                # row_category_validation = self.analysisvalues_df.iloc[row_number+3,1:].tolist()
+                # row_category_labels = self.df_userinput_analysisvalues.iloc[row_number+1,1:].tolist()
+                row_category_analysisvalues = pd.Series(self.df_userinput_analysisvalues.iloc[row_number+2,1:],dtype=int).tolist()
+                # row_category_analysisvalues = pd.Series(self.df_userinput_analysisvalues.iloc[row_number+2,1:],dtype=int).astype(int).tolist()
+                # row_category_validation = self.df_userinput_analysisvalues.iloc[row_number+3,1:].tolist()
                 index = row_category_names.index(category_name)
                 value = row_category_analysisvalues[index]
                 if value==True:
                     value = 1
                 elif value==False:
                     value = 0
-                found_user_input = True
-        if not found_user_input:
-            value = self.mdd_data_categories_df.loc[category_path,sheet_mdddata_categories.column_names['col_analysisvalue']]
-            if not has_value_numeric(value):
-                value = self.mdd_data_categories_df.loc[category_path,sheet_mdddata_categories.column_names['col_analysisvalue_prev']]
-        if not has_value_numeric(value):
-            return None
-        else:
+                return value
+        raise self.CellNotFound('"CAT_XXX" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=category_path,sheet_name=sheet_analysisvalues.sheet_name))
+
+    def read_category_analysisvalue_column_historic(self,question_name,category_name):
+        value = None
+        category_path = '{var}.Categories[{cat}]'.format(var=question_name,cat=category_name)
+        if self.df_mdddata_categories is None or category_path not in self.df_mdddata_categories.index.get_level_values(0):
+            raise self.CellNotFound('"label_mdd" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_mdddata_variables.sheet_name))
+        # value = self.df_mdddata_categories.loc[category_path,sheet_mdddata_categories.column_names['col_analysisvalue']]
+        # if not self.has_value_numeric(value):
+        value = self.df_mdddata_categories.loc[category_path,sheet_mdddata_categories.column_names['col_analysisvalue_prev']]
+        return value
+        
+    def read_category_analysisvalue_column_mdd(self,question_name,category_name):
+        value = None
+        category_path = '{var}.Categories[{cat}]'.format(var=question_name,cat=category_name)
+        if self.df_mdddata_categories is None or category_path not in self.df_mdddata_categories.index.get_level_values(0):
+            raise self.CellNotFound('"label_mdd" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_mdddata_variables.sheet_name))
+        value = self.df_mdddata_categories.loc[category_path,sheet_mdddata_categories.column_names['col_analysisvalue_mdd']]
+        return value
+        
+    def read_category_analysisvalue(self,question_name,category_name):
+        try:
+            return self.read_category_analysisvalue_column_userinput(question_name,category_name)
+        except self.CellNotFound:
+            value = self.read_category_analysisvalue_column_historic(question_name,category_name)
+            # if not self.has_value_text(value):
+            #     value = self.read_category_analysisvalue_column_mdd(question_name,category_name)
             return value
 
-    def read_category_label(self,question_name,category_name):
+    def read_category_label_column_userinput(self,question_name,category_name):
         value = None
-        found_user_input = False
         category_path = '{var}.Categories[{cat}]'.format(var=question_name,cat=category_name)
-        if question_name in self.analysisvalues_df.index.get_level_values(0):
-            row_number = self.analysisvalues_df.index.get_loc(question_name)
-            row_category_names = self.analysisvalues_df.iloc[row_number,1:].tolist()
+        if self.df_userinput_analysisvalues is not None and question_name in self.df_userinput_analysisvalues.index.get_level_values(0):
+            row_number = self.df_userinput_analysisvalues.index.get_loc(question_name)
+            row_category_names = self.df_userinput_analysisvalues.iloc[row_number,1:].tolist()
             if category_name in row_category_names:
-                row_category_labels = self.analysisvalues_df.iloc[row_number+1,1:].tolist()
-                # row_category_analysisvalues = self.analysisvalues_df.iloc[row_number+2,1:].tolist()
-                # row_category_validation = self.analysisvalues_df.iloc[row_number+3,1:].tolist()
+                # an issue is happening here
+                # pandas keeps reading 1's as True, and I can't find a workaround
+                # I am trying to wrap the row with a call to Series(dtype=int), I am trying to call .astype(int)
+                # I am trying to set dtypes=str when reading Excel
+                # I am trying to call df = df.convert_dtypes(convert_boolean=False) right after opening the file
+                # no luck
+                # I just edited Excel and I know I entered 1
+                # I add a breakpoint here, and I see True, not 1, whatever I do
+                # crazy
+
+                row_category_labels = self.df_userinput_analysisvalues.iloc[row_number+1,1:].tolist()
+                # row_category_analysisvalues = pd.Series(self.df_userinput_analysisvalues.iloc[row_number+2,1:],dtype=int).tolist()
+                # row_category_analysisvalues = pd.Series(self.df_userinput_analysisvalues.iloc[row_number+2,1:],dtype=int).astype(int).tolist()
+                # row_category_validation = self.df_userinput_analysisvalues.iloc[row_number+3,1:].tolist()
                 index = row_category_names.index(category_name)
                 value = row_category_labels[index]
-                found_user_input = True
-        if not found_user_input:
-            value = self.mdd_data_categories_df.loc[category_path,sheet_mdddata_categories.column_names['col_label']]
-            if not has_value_text(value):
-                value = self.mdd_data_categories_df.loc[category_path,sheet_mdddata_categories.column_names['col_label_prev']]
-        if not has_value_text(value):
-            return None
-        else:
+                return value
+        raise self.CellNotFound('"CAT_XXX" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=category_path,sheet_name=sheet_analysisvalues.sheet_name))
+
+    def read_category_label_column_historic(self,question_name,category_name):
+        value = None
+        category_path = '{var}.Categories[{cat}]'.format(var=question_name,cat=category_name)
+        if self.df_mdddata_categories is None or category_path not in self.df_mdddata_categories.index.get_level_values(0):
+            raise self.CellNotFound('"label_mdd" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_mdddata_variables.sheet_name))
+        # value = self.df_mdddata_categories.loc[category_path,sheet_mdddata_categories.column_names['col_label']]
+        # if not self.has_value_text(value):
+        value = self.df_mdddata_categories.loc[category_path,sheet_mdddata_categories.column_names['col_label_prev']]
+        return value
+        
+    def read_category_label_column_mdd(self,question_name,category_name):
+        value = None
+        category_path = '{var}.Categories[{cat}]'.format(var=question_name,cat=category_name)
+        if self.df_mdddata_categories is None or category_path not in self.df_mdddata_categories.index.get_level_values(0):
+            raise self.CellNotFound('"label_mdd" cell not found on "{sheet_name}" sheet for "{item}"'.format(item=question_name,sheet_name=sheet_mdddata_variables.sheet_name))
+        value = self.df_mdddata_categories.loc[category_path,sheet_mdddata_categories.column_names['col_label_mdd']]
+        return value
+        
+    def read_category_label(self,question_name,category_name):
+        try:
+            return self.read_category_label_column_userinput(question_name,category_name)
+        except self.CellNotFound:
+            value = self.read_category_label_column_historic(question_name,category_name)
+            # if not self.has_value_text(value):
+            #     value = self.read_category_label_column_mdd(question_name,category_name)
             return value
+

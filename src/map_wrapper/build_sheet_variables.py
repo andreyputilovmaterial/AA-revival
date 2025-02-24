@@ -76,10 +76,16 @@ def build_df(mdd,prev_map,config):
         question_type = '=VLOOKUP($A{row},\'{sheet_name_mdddata}\'!$A$2:${col_mdddata_question_type}$999999,{col_mdddata_question_type_vlookup_index},FALSE)&""'.format(**substitutes)
 
         question_shortname = prev_map.read_question_shortname(question_name)
+        if not prev_map.has_value_text(question_shortname):
+            question_shortname = prev_map.read_question_shortname_column_mdd(question_name)
 
         question_label = prev_map.read_question_label(question_name)
+        if not prev_map.has_value_text(question_label):
+            question_label = prev_map.read_question_label_column_mdd(question_name)
 
         question_include_truefalse = prev_map.read_question_is_included(question_name)
+        if not prev_map.has_value_numeric(question_include_truefalse):
+            question_include_truefalse = prev_map.read_question_is_included_column_mdd(question_name)
         
         question_include = \
             '' if question_include_truefalse=='' \

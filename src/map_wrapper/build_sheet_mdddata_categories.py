@@ -61,13 +61,19 @@ def build_df(mdd,prev_map,config):
                 category_analysisvalue_lookup_row_index = '_xlfn.MATCH( ${col_category}{row}, {category_analysisvalue_lookup_categorynames_array}, 0 )'.format(**substitutes,category_analysisvalue_lookup_categorynames_array=category_analysisvalue_lookup_categorynames_array)
 
                 category_label_mdd = mdmcategory.Label
-                category_label_prev = prev_map.read_category_label(category_question_name,category_name)
+                try:
+                    category_label_prev = prev_map.read_category_label(category_question_name,category_name)
+                except prev_map.CellNotFound:
+                    category_label_prev = None
                 category_label_lookup = '_xlfn.INDEX({where_looking_at}, {index_looking_for} )'.format(where_looking_at=category_analysisvalue_lookup_labels_array,index_looking_for=category_analysisvalue_lookup_row_index)
                 category_label = '=IF({val}&""="","",{val}&"")'.format(val=category_label_lookup)
                 # category_label = ArrayFormula(text=category_label,ref='')
 
                 category_analysisvalue_mdd = aa_logic.sanitize_analysis_value(mdmcategory.Properties['Value'])
-                category_analysisvalue_prev = prev_map.read_category_analysisvalue(category_question_name,category_name)
+                try:
+                    category_analysisvalue_prev = prev_map.read_category_analysisvalue(category_question_name,category_name)
+                except prev_map.CellNotFound:
+                    category_analysisvalue_prev = None
                 category_analysisvalue_lookup = '_xlfn.INDEX({where_looking_at}, {index_looking_for} )'.format(where_looking_at=category_analysisvalue_lookup_analysisvalues_array,index_looking_for=category_analysisvalue_lookup_row_index)
                 category_analysisvalue = '=IF({val}&""="","",{val}&"")'.format(val=category_analysisvalue_lookup)
                 # category_analysisvalue = ArrayFormula(text=category_analysisvalue,ref='')

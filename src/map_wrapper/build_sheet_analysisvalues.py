@@ -86,7 +86,7 @@ def build_df(mdd,prev_map,config):
                 col_index = 3 + col_index_zerobased
                 col_letter = get_column_letter(col_index)
                 category_name = mdmcategory.Name
-                category_path = '{var}.Categories[{cat}]'.format(var=category_question_name,cat=category_name)
+                # category_path = '{var}.Categories[{cat}]'.format(var=category_question_name,cat=category_name)
 
                 substitutes['col'] = col_letter
 
@@ -95,10 +95,14 @@ def build_df(mdd,prev_map,config):
                 substitutes['category_path_as_formula'] = category_path_as_formula
 
                 category_label = prev_map.read_category_label(category_question_name,category_name)
+                if not prev_map.has_value_text(category_label):
+                    category_label = prev_map.read_category_label_column_mdd(category_question_name,category_name)
 
                 category_validation = '=VLOOKUP({category_path_as_formula},\'{sheet_name_mdddata_categories}\'!${col_mddcats_path}$2:${col_mddcats_validation}$999999,{col_mddcats_validation_vlookup_index},FALSE)'.format(**substitutes)
                 
                 category_analysisvalue = prev_map.read_category_analysisvalue(category_question_name,category_name)
+                if not prev_map.has_value_numeric(category_analysisvalue):
+                    category_analysisvalue = prev_map.read_category_analysisvalue_column_mdd(category_question_name,category_name)
 
                 categories_data.append({
                     'name': category_name,
