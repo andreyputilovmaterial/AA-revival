@@ -53,6 +53,9 @@ def generate_savprep_mrs_include_part(mdd,map,config):
     result = result + '\n'
     result = result + '\' AnalysisAuthorRevival\n'
     result = result + '\' Generated: {t} (time configured as system time on a local machine where the script was running, without timezone information)\n'.format(t=config['datetime'])
+    result = result + '#if !defined(VERBOSE)\n'
+    result = result + '#define VERBOSE true\n'
+    result = result + '#endif\n'
     result = result + '\n'
 
     for variable in mddvariables:
@@ -68,8 +71,10 @@ def generate_savprep_mrs_include_part(mdd,map,config):
 
         result = result + '\n'
         result = result + '\' {name}\n'.format(name=question_name)
+        result = result + '#if VERBOSE\n'
         result = result + 'debug.echo("processing {name}...")\n'.format(name=question_name)
         result = result + 'debug.log("processing {name}...")\n'.format(name=question_name)
+        result = result + '#endif\n'
         result = result + 'set oField = {address_field}\n'.format(address_field=make_path_to_field(variable,mdd))
 
         if is_iterative:
