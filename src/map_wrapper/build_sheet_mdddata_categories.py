@@ -86,10 +86,10 @@ def build_df(mdd,prev_map,config):
                 category_helper_validation_isunique           = '=MATCH(${col_helper_field_categoryvalue}{row},${col_helper_field_categoryvalue}$2:${col_helper_field_categoryvalue}$999999,0)=MATCH(${col_helper_field_categorypath}{row},${col_helper_field_categorypath}$2:${col_helper_field_categorypath}$999999,0)'.format(**substitutes)
                 category_helper_validation_isuniquewithinsl   = '=IF(ISBLANK(${col_sharedlist}{row}),TRUE,MATCH(${col_helper_field_slvalue}{row},${col_helper_field_slvalue}$2:${col_helper_field_slvalue}$999999,0)=MATCH(${col_helper_field_slpath}{row},${col_helper_field_slpath}$2:${col_helper_field_slpath}$999999,0))'.format(**substitutes)
 
-                category_helper_field_categorypath    = '=IF(NOT(ISBLANK(${col_analysisvalue}{row})),""&""&${col_question}{row}&".Categories["&${col_category}{row}&"]","")'.format(**substitutes)
-                category_helper_field_categoryvalue   = '=IF(NOT(ISBLANK(${col_analysisvalue}{row})),""&""&${col_question}{row}&".AnalysisValues["&${col_analysisvalue}{row}&"]","")'.format(**substitutes)
-                category_helper_field_slpath          = '=IF(NOT(ISBLANK(${col_sharedlist}{row})),""&"SharedList["&${col_sharedlist}{row}&"].Categories["&${col_category}{row}&"]","-")'.format(**substitutes)
-                category_helper_field_slvalue         = '=IF(NOT(ISBLANK(${col_analysisvalue}{row})),IF(NOT(ISBLANK(${col_sharedlist}{row})),""&"SharedList["&${col_sharedlist}{row}&"].AnalysisValues["&${col_analysisvalue}{row}&"]","-"),"")'.format(**substitutes)
+                category_helper_field_categorypath    = '=IF(AND(${col_helper_validation_varnotinexclusions}{row}=TRUE,NOT(ISBLANK(${col_analysisvalue}{row}))),""&""&${col_question}{row}&".Categories["&${col_category}{row}&"]","")'.format(**substitutes)
+                category_helper_field_categoryvalue   = '=IF(AND(${col_helper_validation_varnotinexclusions}{row}=TRUE,NOT(ISBLANK(${col_analysisvalue}{row}))),""&""&${col_question}{row}&".AnalysisValues["&${col_analysisvalue}{row}&"]","")'.format(**substitutes)
+                category_helper_field_slpath          = '=IF(AND(${col_helper_validation_varnotinexclusions}{row}=TRUE,NOT(ISBLANK(${col_sharedlist}{row}))),""&"SharedList["&${col_sharedlist}{row}&"].Categories["&${col_category}{row}&"]","-")'.format(**substitutes)
+                category_helper_field_slvalue         = '=IF(AND(${col_helper_validation_varnotinexclusions}{row}=TRUE,NOT(ISBLANK(${col_analysisvalue}{row}))),IF(NOT(ISBLANK(${col_sharedlist}{row})),""&"SharedList["&${col_sharedlist}{row}&"].AnalysisValues["&${col_analysisvalue}{row}&"]","-"),"")'.format(**substitutes)
 
                 row_add = [
 
