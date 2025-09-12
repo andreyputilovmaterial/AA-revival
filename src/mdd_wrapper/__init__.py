@@ -162,6 +162,7 @@ class MDD:
     def list_mdmcategories(mdmvariable,skip_shared_lists=False):
         for mdmcat in mdmvariable.Elements:
             if mdmcat.IsReference:
+                # first, let's handle shared list reference
                 try:
                     sl_name_clean = re.sub(r'[\^\\/\.]','',mdmcat.ReferenceName,flags=re.I|re.DOTALL)
                     mdmsharedlist = mdmvariable.Document.Types[sl_name_clean]
@@ -169,16 +170,31 @@ class MDD:
                 except Exception as e:
                     raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=mdmcat.ReferenceName,e=e)) from e
             elif mdmcat.Type==0:
+                # simple category
                 yield mdmcat
-            else:
+            elif mdmcat.Type==13:
+                # sublist - iterate over everything in the inside
                 # for f in list_mdmcategories(mdmcat):
                 #     yield f
                 yield from MDD.list_mdmcategories(mdmcat)
+            elif mdmcat.Type==2:
+                # analysisbase element - do not yield anything, skip - not a data item
+                pass
+            else:
+                # every we did not handle before
+                try:
+                    # for f in list_mdmcategories(mdmcat):
+                    #     yield f
+                    yield from MDD.list_mdmcategories(mdmcat)
+                except Exception as e:
+                    print('Debugging: failed when processing category {mdmcat}, mdmcat.Type == {t}, Error: {e}'.format(mdmcat=mdmcat.Name,t=mdmcat.Type,e=e))
+                    yield mdmcat
 
     @staticmethod
     def list_mdmcategories_with_slname(mdmvariable,skip_shared_lists=False):
         for mdmcat in mdmvariable.Elements:
             if mdmcat.IsReference:
+                # first, let's handle if it's a reference to a shared list
                 try:
                     sl_name_clean = re.sub(r'[\^\\/\.]','',mdmcat.ReferenceName,flags=re.I|re.DOTALL)
                     mdmsharedlist = mdmvariable.Document.Types[sl_name_clean]
@@ -187,11 +203,24 @@ class MDD:
                 except Exception as e:
                     raise Exception('Was not able to refer to a Shared List "{l}": {e}'.format(l=mdmcat.ReferenceName,e=e)) from e
             elif mdmcat.Type==0:
+                # simple plain category - just return it
                 yield None, mdmcat
+            elif mdmcat.Type==13:
+                # sublist - iterate over everything in the inside
+                yield from MDD.list_mdmcategories_with_slname(mdmcat)
+            elif mdmcat.Type==2:
+                # analysisbase element - no need to print, not a data item
+                pass
             else:
+                # something we could not handle before - we'll try to iterate over inner items
                 # for sl_name, mdmcat in list_mdmcategories_with_slname(mdmcat):
                 #     yield sl_name, mdmcat
-                yield from MDD.list_mdmcategories_with_slname(mdmcat)
+                try:
+                    yield from MDD.list_mdmcategories_with_slname(mdmcat)
+                except Exception as e:
+                    print('For debugging: processing "{mdmcat}", mdmcat.Type=={t}: can\'t process'.format(mdmcat=mdmcat.Name,t=mdmcat.Type))
+                    yield None, mdmcat
+                    # raise e
 
     @staticmethod
     def list_mdmdatafields_recursively(mdmvariable):

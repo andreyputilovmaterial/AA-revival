@@ -93,6 +93,13 @@ class Map:
         result.df_validation               = build_sheet_validation.build_df(config)
         
         return result
+    
+
+
+    def prepopulate_analysis_values(self):
+        print('pre-populating the "Analysis Values" sheet...')
+        self.df_userinput_analysisvalues = build_sheet_analysisvalues.prepopulate(self.df_userinput_analysisvalues,self.df_mdddata_categories,self.config)
+        return self.df_userinput_analysisvalues
 
 
 

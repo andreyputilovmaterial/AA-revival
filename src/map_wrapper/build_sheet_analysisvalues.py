@@ -59,65 +59,77 @@ def build_df(mdd,prev_map,config):
         next(performance_counter)
         if mdd.is_iterative(mdmvariable) or mdd.has_own_categories(mdmvariable):
 
+            try:
 
-            substitutes = {
-                **sheet.column_letters,
-                # 'row': data.get_working_row_number(),
-                'row': row,
-                'sheet_name_mdddata_categories': sheet_mdddata_categories.sheet_name,
-                'sheet_name_mdddata_variables': sheet_mdddata_variables.sheet_name,
-                'col_mddvars_question': sheet_mdddata_variables.column_letters['col_question'],
-                'col_mddvars_shortname': sheet_mdddata_variables.column_letters['col_shortname'],
-                'col_mddvars_shortname_vlookup_index': sheet_mdddata_variables.column_vlookup_index['col_shortname'],
-                'col_mddvars_include': sheet_mdddata_variables.column_letters['col_include'],
-                'col_mddvars_include_vlookup_index': sheet_mdddata_variables.column_vlookup_index['col_include'],
-                'col_mddcats_path': sheet_mdddata_categories.column_letters['col_path'],
-                'col_mddcats_validation': sheet_mdddata_categories.column_letters['col_validation'],
-                'col_mddcats_validation_vlookup_index': sheet_mdddata_categories.column_vlookup_index['col_validation'],
-            }
+                substitutes = {
+                    **sheet.column_letters,
+                    # 'row': data.get_working_row_number(),
+                    'row': row,
+                    'sheet_name_mdddata_categories': sheet_mdddata_categories.sheet_name,
+                    'sheet_name_mdddata_variables': sheet_mdddata_variables.sheet_name,
+                    'col_mddvars_question': sheet_mdddata_variables.column_letters['col_question'],
+                    'col_mddvars_shortname': sheet_mdddata_variables.column_letters['col_shortname'],
+                    'col_mddvars_shortname_vlookup_index': sheet_mdddata_variables.column_vlookup_index['col_shortname'],
+                    'col_mddvars_include': sheet_mdddata_variables.column_letters['col_include'],
+                    'col_mddvars_include_vlookup_index': sheet_mdddata_variables.column_vlookup_index['col_include'],
+                    'col_mddcats_path': sheet_mdddata_categories.column_letters['col_path'],
+                    'col_mddcats_validation': sheet_mdddata_categories.column_letters['col_validation'],
+                    'col_mddcats_validation_vlookup_index': sheet_mdddata_categories.column_vlookup_index['col_validation'],
+                }
 
-            categories_data = []
-            category_question_shortname       = '=VLOOKUP(${col_question}{row},\'{sheet_name_mdddata_variables}\'!${col_mddvars_question}$2:${col_mddvars_shortname}$999999,{col_mddvars_shortname_vlookup_index},FALSE)'.format(**substitutes)
-            category_question_include_truefalse = 'VLOOKUP(${col_question}{row},\'{sheet_name_mdddata_variables}\'!${col_mddvars_question}$2:${col_mddvars_include}$999999,{col_mddvars_include_vlookup_index},FALSE)'.format(**substitutes)
-            category_question_in_exclusions   = '=IF({val},"","(exclude)")'.format(val=category_question_include_truefalse)
+                categories_data = []
+                category_question_shortname       = '=VLOOKUP(${col_question}{row},\'{sheet_name_mdddata_variables}\'!${col_mddvars_question}$2:${col_mddvars_shortname}$999999,{col_mddvars_shortname_vlookup_index},FALSE)'.format(**substitutes)
+                category_question_include_truefalse = 'VLOOKUP(${col_question}{row},\'{sheet_name_mdddata_variables}\'!${col_mddvars_question}$2:${col_mddvars_include}$999999,{col_mddvars_include_vlookup_index},FALSE)'.format(**substitutes)
+                category_question_in_exclusions   = '=IF({val},"","(exclude)")'.format(val=category_question_include_truefalse)
 
-            for col_index_zerobased, mdmcategory in enumerate(mdd.list_mdmcategories(mdmvariable)):
+                for col_index_zerobased, mdmcategory in enumerate(mdd.list_mdmcategories(mdmvariable)):
 
-                col_index = 3 + col_index_zerobased
-                col_letter = get_column_letter(col_index)
-                category_name = mdmcategory.Name
-                # category_path = '{var}.Categories[{cat}]'.format(var=category_question_name,cat=category_name)
+                    try:
+                        
+                        col_index = 3 + col_index_zerobased
+                        col_letter = get_column_letter(col_index)
+                        category_name = mdmcategory.Name
+                        # category_path = '{var}.Categories[{cat}]'.format(var=category_question_name,cat=category_name)
 
-                substitutes['col'] = col_letter
+                        substitutes['col'] = col_letter
 
-                category_path_as_formula = '""&$A{row}&".Categories["&{col}{row}&"]"'.format(**substitutes)
+                        category_path_as_formula = '""&$A{row}&".Categories["&{col}{row}&"]"'.format(**substitutes)
 
-                substitutes['category_path_as_formula'] = category_path_as_formula
+                        substitutes['category_path_as_formula'] = category_path_as_formula
 
-                category_label = prev_map.read_category_label(category_question_name,category_name)
-                if not prev_map.has_value_text(category_label):
-                    category_label = prev_map.read_category_label_column_mdd(category_question_name,category_name)
+                        category_label = prev_map.read_category_label(category_question_name,category_name)
+                        if not prev_map.has_value_text(category_label):
+                            category_label = prev_map.read_category_label_column_mdd(category_question_name,category_name)
 
-                category_validation = '=VLOOKUP({category_path_as_formula},\'{sheet_name_mdddata_categories}\'!${col_mddcats_path}$2:${col_mddcats_validation}$999999,{col_mddcats_validation_vlookup_index},FALSE)'.format(**substitutes)
-                
-                category_analysisvalue = prev_map.read_category_analysisvalue(category_question_name,category_name)
-                if not prev_map.has_value_numeric(category_analysisvalue):
-                    category_analysisvalue = prev_map.read_category_analysisvalue_column_mdd(category_question_name,category_name)
+                        category_validation = '=VLOOKUP({category_path_as_formula},\'{sheet_name_mdddata_categories}\'!${col_mddcats_path}$2:${col_mddcats_validation}$999999,{col_mddcats_validation_vlookup_index},FALSE)'.format(**substitutes)
+                        
+                        category_analysisvalue = prev_map.read_category_analysisvalue(category_question_name,category_name)
+                        if not prev_map.has_value_numeric(category_analysisvalue):
+                            category_analysisvalue = prev_map.read_category_analysisvalue_column_mdd(category_question_name,category_name)
 
-                categories_data.append({
-                    'name': category_name,
-                    'label': category_label,
-                    'value': category_analysisvalue,
-                    'validation': category_validation,
-                })
-            
-            data_add.append({
-                'Question':category_question_name,
-                'ShortName': category_question_shortname,
-                'is_excluded': category_question_in_exclusions,
-                'data': categories_data,
-            })
-            row = row + 4
+                        categories_data.append({
+                            'name': category_name,
+                            'label': category_label,
+                            'value': category_analysisvalue,
+                            'validation': category_validation,
+                        })
+                    
+                    except Exception as e:
+                        print('Failed when processing category {cat}, Error: {e}'.format(cat=mdmcategory.Name,e=e)) # TODO: print to stderr
+                        raise e
+                        
+                    data_add.append({
+                        'Question':category_question_name,
+                        'ShortName': category_question_shortname,
+                        'is_excluded': category_question_in_exclusions,
+                        'data': categories_data,
+                    })
+                    row = row + 4
+
+            except Exception as e:
+                print('Failed when processing variable {mdmvar}, Error: {e}'.format(mdmvar=mdmvariable.Name,e=e))
+                raise e
+
 
     cat_columns_count = max([len(record['data']) for record in data_add])
     # df = util_dataframe_wrapper.PandasDataframeWrapper(sheet.columns).to_df()
@@ -193,3 +205,11 @@ def build_df(mdd,prev_map,config):
     df.set_index('Question',inplace=True)
     return df
 
+
+
+def prepopulate(df_sheet_analysisvalues,df_sheet_categories,config):
+    df_sheet_categories = df_sheet_categories.copy()
+    variables_to_process = []
+    for rownumber in range(0,len(df_sheet_categories)):
+        pass
+    return df_sheet_analysisvalues
