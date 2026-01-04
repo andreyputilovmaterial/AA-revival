@@ -20,8 +20,8 @@ ECHO # ... >> dist/mdmtools_aarevival.py
 ECHO # print('within mdmtools_aarevival') >> dist/mdmtools_aarevival.py
 REM REM :: no need for this, the root package is loaded automatically
 @REM ECHO # import mdmtools_aarevival >> dist/mdmtools_aarevival.py
-ECHO from src import program >> dist/mdmtools_aarevival.py
-ECHO program.cli() >> dist/mdmtools_aarevival.py
+ECHO from src import launcher >> dist/mdmtools_aarevival.py
+ECHO launcher.cli() >> dist/mdmtools_aarevival.py
 ECHO # print('out of mdmtools_aarevival') >> dist/mdmtools_aarevival.py
 
 PUSHD dist
