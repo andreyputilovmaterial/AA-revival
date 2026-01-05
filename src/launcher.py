@@ -2,11 +2,9 @@ from datetime import datetime, timezone
 import argparse
 from pathlib import Path
 import traceback
-import shutil
 
 
-
-import codecs
+import codecs # to save output scripts in proper encoding - some unicode, probably utf-8, or -16
 
 
 
@@ -15,27 +13,21 @@ if __name__ == '__main__':
     import write_mrs
     from mdd_wrapper import MDD
     from map_wrapper import ExcelMap
+    from map_wrapper.backup_manager import BackupManager
 elif '.' in __name__:
     # package
     from . import write_mrs
     from .mdd_wrapper import MDD
     from .map_wrapper import ExcelMap
+    from .map_wrapper.backup_manager import BackupManager
 else:
     # included with no parent package
     import write_mrs
     from mdd_wrapper import MDD
     from map_wrapper import ExcelMap
+    from map_wrapper.backup_manager import BackupManager
 
 
-
-
-def create_backup(out_filename,config):
-    script_run_datetime = config['datetime']
-    script_run_datetime = script_run_datetime.strftime('_%Y%m%d_%I%M%S_Z')
-    out_bkp_filename = out_filename.with_stem(out_filename.stem+'_backup_'+script_run_datetime)
-    from_file = Path(out_filename)
-    to_file = Path(out_bkp_filename)
-    shutil.copy(from_file,to_file)
 
 
 
@@ -80,6 +72,7 @@ def cli_program_update_map():
     
     config = {}
     config['datetime'] = time_start
+    config['script_name'] = script_name
     config['skip_map_backup'] = False
     if args.no_map_backup:
         config['skip_map_backup'] = True
@@ -146,8 +139,11 @@ def cli_program_update_map():
     out_filename = Path(out_filename)
     if not not map_filename and Path(map_filename).is_file():
         if not config['skip_map_backup']:
-            print('{script_name}: creating backup of the map: {map_fname}'.format(script_name=script_name,map_fname=out_filename))
-            create_backup(out_filename,config)
+            bkp_manager = BackupManager(
+                config,
+                config['backups'] or {} if 'backups' in config else {}
+            )
+            bkp_manager.make_copy(out_filename)
     assert out_filename, 'out filename is still missing, please check the code'
 
     print('{script_name}: working, updating the map'.format(script_name=script_name))
@@ -196,6 +192,7 @@ def cli_program_produce_savprep_mrs():
     # if args.write_template:
     #     config['need_write_template'] = True
     config['datetime'] = time_start
+    config['script_name'] = script_name
 
     mdd = None
     if args.mdd:

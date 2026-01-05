@@ -6,7 +6,7 @@ import sys # for error reporting, to print to stderr
 
 
 
-from .backup_manager import BackupManager
+# from .backup_manager import BackupManager
 
 from . import build_sheet_overview
 from . import build_sheet_variables
@@ -66,7 +66,12 @@ class ExcelMap:
         self.df_mdddata_variables = df_mdddata_variables
         self.df_mdddata_categories = df_mdddata_categories
 
-        self.config = config
+        self.config = config or {}
+
+        # self._bkp_manager = BackupManager(
+        #     config,
+        #     config['backups'] or {} if 'backups' in config else {}
+        # )
 
 
 
