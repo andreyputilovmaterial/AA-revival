@@ -17,40 +17,35 @@ def format_sheet_analysisvalues(sheet):
     alignment_center_top = Alignment(horizontal='center',vertical='top')
     alignment_center_top_wrap = Alignment(wrap_text=True,horizontal='center',vertical='top')
     # row_height = sheet.sheet_format.defaultRowHeight
-    for row_num_within_data_range_zero_based, row in enumerate([r for r in sheet.rows][1:]):
-        row_num_openpyxl = row_num_within_data_range_zero_based + 1
-        if row_num_within_data_range_zero_based % 4 == 0:
-            # category name
-            for cell_index, cell in enumerate(row):
-                # the first two cells are category name and short name, and then, column C, is the first category
-                # but we color the whole row, including 1st 2 cells
+    # return sheet
+    for i, row in enumerate(sheet.iter_rows(min_row=2), start=0):
+        row_prefix = row[:2]
+        row_data   = row[2:]
+
+        mod = i % 4
+
+        if mod == 0:  # category name
+            for cell in row:
                 cell.fill = fill_categorynames
                 cell.alignment = alignment_center_top_wrap
-        elif row_num_within_data_range_zero_based % 4 == 1:
-            # category label
-            # categories start at column C, so we skip 1st 2 columns
-            for cell_index, cell in enumerate(row):
-                if cell_index>1:
-                    cell.fill = fill_shaded
-                    cell.alignment = alignment_center_top
-        elif row_num_within_data_range_zero_based % 4 == 2:
-            # analysis values
-            # categories start at column C, so we skip 1st 2 columns
-            for cell_index, cell in enumerate(row):
-                if cell_index>1:
-                    cell.alignment = alignment_center_top
-                elif cell_index==1:
-                    # actually, I'll put some flag if the field is in exclusions here in that cell in column B
-                    cell.font = color_shaded
-                    cell.alignment = alignment_center_top
-        elif row_num_within_data_range_zero_based % 4 == 3:
-            # validation flag
-            # categories start at column C, so we skip 1st 2 columns
-            for cell_index, cell in enumerate(row):
-                if cell_index>1:
-                    cell.font = color_shaded
-                    cell.alignment = alignment_center_top
+
+        elif mod == 1:  # category label
+            for cell in row_data:
+                cell.fill = fill_shaded
+                cell.alignment = alignment_center_top
+
+        elif mod == 2:  # analysis values
+            for cell in row_data:
+                cell.alignment = alignment_center_top
+            row_prefix[1].font = color_shaded
+            row_prefix[1].alignment = alignment_center_top
+
+        elif mod == 3:  # validation flag
+            for cell in row_data:
+                cell.font = color_shaded
+                cell.alignment = alignment_center_top
         # sheet.row_dimensions[row_num_openpyxl].height = row_height * 2
+    
     sheet.conditional_formatting.add("$C$2:$ZZ$999999",FormulaRule(formula=['=IF(ISNUMBER(SEARCH("Analysis Value",$A2)),IF(NOT(ISBLANK(C1)),IF(NOT(ISBLANK(C2)),IF(ISERROR(C3),TRUE,NOT(C3)),FALSE),FALSE),FALSE)'],fill=fill_failed))
     # sheet.conditional_formatting.add("$C$2:$ZZ$999999",FormulaRule(formula=['=IF(ISNUMBER(SEARCH("Analysis Value",$A2)),IF(NOT(ISBLANK(C1)),IF(ISBLANK(C2),TRUE,FALSE),FALSE),FALSE)'],fill=fill_missing))
     sheet.conditional_formatting.add("$C$2:$ZZ$999999",FormulaRule(formula=['IF(ISNUMBER(SEARCH("Analysis Value",$A2)),IF(NOT(ISBLANK(C1)),IF(ISBLANK(C2),IF(ISERROR(C3),TRUE,NOT(C3)),FALSE),FALSE),FALSE)'],fill=fill_missing))
