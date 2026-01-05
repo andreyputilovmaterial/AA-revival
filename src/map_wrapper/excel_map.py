@@ -1,12 +1,15 @@
 
 import pandas as pd
 import numpy as np # this is almost unnecessary but I am checking types for debugging and validation
+from pathlib import Path # to have excel saved in 2-step, so to be able to manipulate file names
 
 import sys # for error reporting, to print to stderr
 
 
 
 # from .backup_manager import BackupManager
+
+from . import excel_formula_recalc
 
 from . import build_sheet_overview
 from . import build_sheet_variables
@@ -127,6 +130,14 @@ class ExcelMap:
 
 
     def write_to_file(self,out_filename):
+        """
+        this is done in 2 steps
+        first we save with standard pandas methods (like openpyxl here, but the provider can be different)
+        the problem is that formulas are not re-calculated, whatever provider we use
+        so we re-open the file again through native Excel app through COM API
+        formulas are getting re-calculated
+        and we re-save the file
+        """
 
         config = self.config
 
@@ -137,8 +148,12 @@ class ExcelMap:
         df_mdddata_variables = self.df_mdddata_variables
         df_mdddata_categories = self.df_mdddata_categories
 
+        out_filename_temp = Path(out_filename).with_stem(out_filename.stem+'_TEMP')
+        out_filename_final = out_filename
+
+        print('{script_name}: saving as temporary file (will need to re-calculate formulas after that)...'.format(script_name=config['script_name'],map_fname=out_filename_temp))
         
-        with pd.ExcelWriter(out_filename, engine='openpyxl') as writer:
+        with pd.ExcelWriter(out_filename_temp, engine='openpyxl') as writer:
             df_overview.to_excel(writer, sheet_name=sheet_overview.sheet_name)
             df_userinput_variables.to_excel(writer, sheet_name=sheet_variables.sheet_name)
             df_userinput_analysisvalues.to_excel(writer, sheet_name=sheet_analysisvalues.sheet_name)
@@ -158,6 +173,8 @@ class ExcelMap:
             writer.sheets[sheet_mdddata_variables.sheet_name].sheet_state = 'hidden' # openpyxl-specific syntax
             writer.sheets[sheet_mdddata_categories.sheet_name].protection.sheet = True # openpyxl-specific syntax
             writer.sheets[sheet_mdddata_categories.sheet_name].sheet_state = 'hidden' # openpyxl-specific syntax
+        
+        excel_formula_recalc.refresh_and_save(out_filename_temp,out_filename_final,config)
 
 
     @staticmethod
