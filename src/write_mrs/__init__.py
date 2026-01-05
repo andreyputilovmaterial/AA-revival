@@ -44,7 +44,7 @@ def make_path_to_field(variable,MDD):
 
 
 
-def generate_savprep_mrs_include_part(mdd,map,config):
+def generate_savprep_mrs_include_part(mdd,excel_map,config):
     assert not not mdd, 'Error: MDD is required but it missing'
     mddvariables = mdd.variables
 
@@ -63,11 +63,11 @@ def generate_savprep_mrs_include_part(mdd,map,config):
             continue
         question_name = variable.FullName
 
-        is_included            = map.read_question_is_included(question_name)
-        is_data_variable       = mdd.is_data_item(variable) # map.read_question_...()
+        is_included            = excel_map.read_question_is_included(question_name)
+        is_data_variable       = mdd.is_data_item(variable) # excel_map.read_question_...()
         is_iterative           = mdd.is_iterative(variable) or mdd.has_own_categories(variable)
-        question_shortname     = map.read_question_shortname(question_name)
-        question_label         = map.read_question_label(question_name)
+        question_shortname     = excel_map.read_question_shortname(question_name)
+        question_label         = excel_map.read_question_label(question_name)
 
         result = result + '\n'
         result = result + '\' {name}\n'.format(name=question_name)
@@ -81,11 +81,11 @@ def generate_savprep_mrs_include_part(mdd,map,config):
             for category in mdd.list_mdmcategories(variable):
                 category_name = category.Name
 
-                category_analysisvalue = map.read_category_analysisvalue(question_name,category_name)
+                category_analysisvalue = excel_map.read_category_analysisvalue(question_name,category_name)
                 if isinstance(category_analysisvalue,str):
                     if re.match(r'^\s*?$',category_analysisvalue,flags=re.I|re.DOTALL): # if empty, set true emptyness
                         category_analysisvalue = None
-                category_label = map.read_category_label(question_name,category_name)
+                category_label = excel_map.read_category_label(question_name,category_name)
 
                 if is_included:
                     if category_analysisvalue is None:

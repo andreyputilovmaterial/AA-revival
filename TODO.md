@@ -18,7 +18,7 @@ basically, same method of generating SPSS is used. It means, it will be very sim
 - - Only real variables (meaningful) are included - no rows for outer grid or loop objects that do not mean actually a variable that were included in old AA and in Flatout, and these rows could look quite confusing)
 - - As syntax sugar - we also have a longer description on variable type
 - - There is a field for user comments, and comments are saved when the map is reloaded! Whoa!
-- - For now, I don't have autofill. It means, if a new value is appears, it needs to be filled. Same as in older AA. Autofill is probably a necessary option when a new map is laoded - 
+- - For now, I don't have autofill. It means, if a new value is appears, it needs to be filled. Same as in older AA. Autofill is probably a necessary option when a new map is loaded - 
 - filling it manually - project teams do not like it.
 - - No requirement to have map named exactly as per MDD or to be located in the same folder.
 - This new AA is in python but it uses our older dms scrips. Actually, bigger part can be transformed to Python. Why Python? Because it has everything we need, it is widespread. Simple and well-known approaches. Anyway we need some language, we can't implement all in vbscript and dms, those languages are outdated and very limited. I think Python is a good choice. I tried to have very little dependencies on external libraries. Openpyxl package is needed for formulas and formatting, Pandas package is needed as base package for working with Excel. Unicome tools are needed for reading MDD (every SE has it installed).

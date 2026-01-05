@@ -14,17 +14,17 @@ if __name__ == '__main__':
     # run as a program
     import write_mrs
     from mdd_wrapper import MDD
-    from map_wrapper import Map
+    from map_wrapper import ExcelMap
 elif '.' in __name__:
     # package
     from . import write_mrs
     from .mdd_wrapper import MDD
-    from .map_wrapper import Map
+    from .map_wrapper import ExcelMap
 else:
     # included with no parent package
     import write_mrs
     from mdd_wrapper import MDD
-    from map_wrapper import Map
+    from map_wrapper import ExcelMap
 
 
 
@@ -103,21 +103,21 @@ def cli_program_update_map():
         mdd = MDD(mdd_filename)
 
     map_filename = None
-    map = None
+    excel_map = None
     if args.map:
         map_filename = Path(args.map)
         map_filename = '{fname}'.format(fname=map_filename.resolve())
         if not not map_filename and Path(map_filename).is_file():
             print('{script_name}: reading map "{fname}"'.format(fname=map_filename,script_name=script_name))
-            map = Map(map_filename,config)
+            excel_map = ExcelMap(map_filename,config)
         else:
             if 'create_map_if_not_exists' in config and config['create_map_if_not_exists']:
                 pass
             else:
                 raise FileNotFoundError('file not found: {fname}'.format(fname=map_filename))
     
-    if not map:
-        map = Map(None,config)
+    if not excel_map:
+        excel_map = ExcelMap(None,config)
     
     config['mdd_file_provided'] = not not mdd_filename
     config['map_file_provided'] = not not map_filename
@@ -130,7 +130,7 @@ def cli_program_update_map():
         if not map_filename:
             raise FileNotFoundError('MDD not map file are provided. You have to pass MDD file name and/or map file name. If MDD file name is not provided, it can be read from the map. If map file is not provided, it will be created with a default name. But you have to set of of those, --mdd or --map, or both.')
         print('{script_name}: MDD name not provided, reading MDD path from the map'.format(script_name=script_name))
-        mdd_filename = map.get_mdd_path()
+        mdd_filename = excel_map.get_mdd_path()
         mdd_filename = Path(mdd_filename)
         if not mdd_filename.is_absolute():
             # relative to AA Excel Map file
@@ -146,12 +146,12 @@ def cli_program_update_map():
     out_filename = Path(out_filename)
     if not not map_filename and Path(map_filename).is_file():
         if not config['skip_map_backup']:
-            print('{script_name}: creating backup of the map: {map}'.format(script_name=script_name,map=out_filename))
+            print('{script_name}: creating backup of the map: {map_fname}'.format(script_name=script_name,map_fname=out_filename))
             create_backup(out_filename,config)
     assert out_filename, 'out filename is still missing, please check the code'
 
     print('{script_name}: working, updating the map'.format(script_name=script_name))
-    result_df = map.update(mdd)
+    result_df = excel_map.update(mdd)
     
     print('{script_name}: saving as "{fname}"'.format(fname=out_filename,script_name=script_name))
     result_df.write_to_file(out_filename)
@@ -208,14 +208,14 @@ def cli_program_produce_savprep_mrs():
     else:
         raise FileNotFoundError('MDD: file not provided; please use --mdd option')
 
-    map = None
+    excel_map = None
     if args.map:
         map_filename = Path(args.map)
         map_filename = '{fname}'.format(fname=map_filename.resolve())
         if not mdd_filename or not(Path(map_filename).is_file()):
             raise FileNotFoundError('file not found: {fname}'.format(fname=map_filename))
         print('{script_name}: reading map "{fname}"'.format(fname=map_filename,script_name=script_name))
-        map = Map(map_filename,config)
+        excel_map = ExcelMap(map_filename,config)
     else:
         raise FileNotFoundError('Map: file not provided; please use --map option')
 
@@ -245,7 +245,7 @@ def cli_program_produce_savprep_mrs():
     #         outfile.write(result_template)
 
     print('{script_name}: working, generating mrs script, include addin'.format(script_name=script_name))
-    result_include_addin = write_mrs.generate_savprep_mrs_include_part(mdd,map,config)
+    result_include_addin = write_mrs.generate_savprep_mrs_include_part(mdd,excel_map,config)
 
     print('{script_name}: saving as "{fname}"'.format(fname=out_filename_include_addin,script_name=script_name))
     with open(out_filename_include_addin, "wb") as outfile:
@@ -258,11 +258,19 @@ def cli_program_produce_savprep_mrs():
 
 
 
+def cli_program_test():
+    msg = '''
+Hello, world!
+'''
+    print(msg)
+
+
 
 def cli():
     programs_to_run = {
         'write_mrs': cli_program_produce_savprep_mrs,
         'update_map': cli_program_update_map,
+        'test': cli_program_test,
     }
     try:
         parser = argparse.ArgumentParser(
