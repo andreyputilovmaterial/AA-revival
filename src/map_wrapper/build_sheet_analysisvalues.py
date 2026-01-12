@@ -118,13 +118,13 @@ def build_df(mdd,prev_map,config):
                         print('Failed when processing category {cat}, Error: {e}'.format(cat=mdmcategory.Name,e=e)) # TODO: print to stderr
                         raise e
                         
-                    data_add.append({
-                        'Question':category_question_name,
-                        'ShortName': category_question_shortname,
-                        'is_excluded': category_question_in_exclusions,
-                        'data': categories_data,
-                    })
-                    row = row + 4
+                data_add.append({
+                    'Question':category_question_name,
+                    'ShortName': category_question_shortname,
+                    'is_excluded': category_question_in_exclusions,
+                    'data': categories_data,
+                })
+                row = row + 4
 
             except Exception as e:
                 print('Failed when processing variable {mdmvar}, Error: {e}'.format(mdmvar=mdmvariable.Name,e=e))
